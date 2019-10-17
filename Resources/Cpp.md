@@ -19,3 +19,4 @@
 
 # Blogs
 * [C++ Links](https://www.bfilipek.com/)
+* [Fluent Cpp](https://www.fluentcpp.com/)
