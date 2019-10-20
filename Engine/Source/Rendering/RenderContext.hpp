@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "vulkan/vulkan.hpp"
+#include "GLFW/glfw3.h"
 
 #include "System/Configuration.hpp"
 
@@ -11,7 +12,7 @@ namespace Hyperion::Rendering {
 
 	class RenderContext {
 	public:
-		RenderContext(const Configuration& config);
+		explicit RenderContext(const Configuration& config);
 
 	private:
 		const std::vector<const char*> instanceLayers = {
@@ -30,9 +31,15 @@ namespace Hyperion::Rendering {
 		};
 
 		vk::Instance instance;
-		vk::PhysicalDevice phyDevice;
+		GLFWwindow* window;
+		vk::PhysicalDevice physDevice;
 		vk::Device device;
-		vk::SwapchainKHR swapChain;
+
+		vk::Extent2D resolution = { 1920, 1080 };
+
+		vk::PhysicalDevice pickGPU();
+		std::vector<vk::DeviceQueueCreateInfo> getQueueCreateInfo();
+		vk::PhysicalDeviceFeatures getDeviceFeatures();
 
 	};
 }

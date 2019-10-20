@@ -4,6 +4,8 @@
   <PropertyGroup Label="UserMacros">
     <VulkanSDK>C:\VulkanSDK\1.1.121.2</VulkanSDK>
     <glmDir>$(VulkanSDK)\Third-Party\Include</glmDir>
+    <GLFWDir32>C:\GLFW\glfw-3.3.bin.WIN32</GLFWDir32>
+    <GLFWDir64>C:\GLFW\glfw-3.3.bin.WIN64</GLFWDir64>
   </PropertyGroup>
   <PropertyGroup>
     <_PropertySheetDisplayName>Custom</_PropertySheetDisplayName>
@@ -15,6 +17,12 @@
     </BuildMacro>
     <BuildMacro Include="glmDir">
       <Value>$(glmDir)</Value>
+    </BuildMacro>
+    <BuildMacro Include="GLFWDir32">
+      <Value>$(GLFWDir32)</Value>
+    </BuildMacro>
+    <BuildMacro Include="GLFWDir64">
+      <Value>$(GLFWDir64)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

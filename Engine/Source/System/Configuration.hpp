@@ -19,7 +19,7 @@ namespace Hyperion {
 	class Configuration {
 
 	public:
-		Configuration(const std::string applicationName, const Version applicationVersion);
+		explicit Configuration(const std::string applicationName, const Version applicationVersion);
 
 		const std::string applicationName;
 		const std::string engineName = "Hyperion Engine";
