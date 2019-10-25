@@ -38,8 +38,9 @@ namespace Hyperion::Rendering {
 		vk::Extent2D resolution = { 1920, 1080 };
 
 		vk::PhysicalDevice pickGPU();
-		std::vector<vk::DeviceQueueCreateInfo> getQueueCreateInfo();
+		std::array<vk::DeviceQueueCreateInfo, 4> getQueueCreateInfo();
 		vk::PhysicalDeviceFeatures getDeviceFeatures();
+		uint32_t getQueueFamilyIndex(vk::QueueFlags flags);
 
 	};
 }

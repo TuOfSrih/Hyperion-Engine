@@ -44,7 +44,7 @@ Hyperion::Rendering::RenderContext::RenderContext(const Configuration& config)
 		)
 	);
 
-	vk::
+	//vk::
 
 }
 //TODO More sophisticated process, but how? Most VRAM? All comparison operators?
@@ -80,13 +80,72 @@ vk::PhysicalDevice Hyperion::Rendering::RenderContext::pickGPU()
 	return bestGPU;
 }
 
-std::vector<vk::DeviceQueueCreateInfo> Hyperion::Rendering::RenderContext::getQueueCreateInfo()
+std::array<vk::DeviceQueueCreateInfo, 4> Hyperion::Rendering::RenderContext::getQueueCreateInfo()
 {
-	return std::vector<vk::DeviceQueueCreateInfo>();
+	//TODO Save additional use of getQueueFamilyIndex
+	const std::array<const float, 4> prios = { 0, 0, 0, 0 };
+	std::array < vk::DeviceQueueCreateInfo, 4> queueInfos = {
+		vk::DeviceQueueCreateInfo(
+			vk::DeviceQueueCreateFlags(),
+			getQueueFamilyIndex(vk::QueueFlags(VK_QUEUE_GRAPHICS_BIT)),
+			1,
+			prios.data()
+		),
+		vk::DeviceQueueCreateInfo(
+			vk::DeviceQueueCreateFlags(),
+			getQueueFamilyIndex(vk::QueueFlags(VK_QUEUE_COMPUTE_BIT)),
+			1,
+			prios.data()
+		),
+		vk::DeviceQueueCreateInfo(
+			vk::DeviceQueueCreateFlags(),
+			getQueueFamilyIndex(vk::QueueFlags(VK_QUEUE_TRANSFER_BIT)),
+			1,
+			prios.data()
+		)
+	};
+
+	return queueInfos;
 }
 
 vk::PhysicalDeviceFeatures Hyperion::Rendering::RenderContext::getDeviceFeatures()
 {
-	return vk::PhysicalDeviceFeatures();
+	//TODO Revisit later and check whether everything is included
+	VkPhysicalDeviceFeatures features = {};
+#ifdef _DEBUG
+	features.robustBufferAccess = VK_TRUE;
+#endif
+	features.geometryShader = VK_TRUE;
+	features.tessellationShader = VK_TRUE;
+	features.depthClamp = VK_TRUE;
+	features.depthBiasClamp = VK_TRUE;
+	features.fillModeNonSolid = VK_TRUE;
+	features.depthBounds = VK_TRUE;
+	/*features.wideLines = VK_TRUE;
+	features.largePoints = VK_TRUE;
+	features.multiViewport = VK_TRUE*/
+	features.samplerAnisotropy = VK_TRUE;
+	/*features.occlusionQueryPrecise = VK_TRUE;
+	features.vertexPipelineStoresAndAtomics = VK_TRUE;
+	features.fragmentStoresAndAtomics = VK_TRUE;
+	features.shaderTessellationAndGeometryPointSize = VK_TRUE;
+	features.shaderStorageImageMultisample = VK_TRUE;
+	features.shaderUniformBufferArrayDynamicIndexing = VK_TRUE;
+	features.shaderSampledImageArrayDynamicIndexing = VK_TRUE;
+	features.shaderStorageBufferArrayDynamicIndexing = VK_TRUE;
+	features.shaderStorageImageArrayDynamicIndexing = VK_TRUE;
+	features.shaderClipDistance = VK_TRUE;
+	features.shaderCullDistance = VK_TRUE;
+	features.shaderInt16 = VK_TRUE;
+	features.shaderResourceMinLod = VK_TRUE;
+	features.sparseBinding = VK_TRUE;*/
+
+		
+	return vk::PhysicalDeviceFeatures(features);
+}
+
+uint32_t Hyperion::Rendering::RenderContext::getQueueFamilyIndex(vk::QueueFlags flags)
+{
+	return uint32_t();
 }
 
