@@ -1,0 +1,12 @@
+
+#include "vulkan/vulkan.hpp"
+
+namespace Hyperion::Rendering {
+
+	class VideoSettings {
+
+	public:
+		vk::Extent2D resolution{ 1920, 1080 };
+		uint8_t imageCount = 3;
+	};
+}

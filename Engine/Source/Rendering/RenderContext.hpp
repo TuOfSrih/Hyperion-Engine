@@ -6,13 +6,24 @@
 #include "GLFW/glfw3.h"
 
 #include "System/Configuration.hpp"
+#include "Rendering/VideoSettings.hpp"
 
 
 namespace Hyperion::Rendering {
 
+	//TODO Subdivide into Context + VulkanContext
+	class QueueFamilyIndices {
+	public:
+		const uint32_t graphicsIndex;
+		const uint32_t transferIndex;
+		const uint32_t computeIndex;
+	};
+
 	class RenderContext {
 	public:
 		explicit RenderContext(const Configuration& config);
+
+		~RenderContext();
 
 	private:
 		const std::vector<const char*> instanceLayers = {
@@ -34,13 +45,18 @@ namespace Hyperion::Rendering {
 		GLFWwindow* window;
 		vk::PhysicalDevice physDevice;
 		vk::Device device;
+		vk::Queue graphicsQueue;
+		vk::Queue computeQueue;
+		vk::Queue transferQueue;
+		vk::SurfaceKHR surface;
+		vk::SwapchainKHR swapchain{};
 
-		vk::Extent2D resolution = { 1920, 1080 };
+		VideoSettings videoSettings;
 
 		vk::PhysicalDevice pickGPU();
-		std::array<vk::DeviceQueueCreateInfo, 4> getQueueCreateInfo();
+		std::vector<vk::DeviceQueueCreateInfo> getQueueCreateInfo(const std::vector<float>& prios);
 		vk::PhysicalDeviceFeatures getDeviceFeatures();
-		uint32_t getQueueFamilyIndex(vk::QueueFlags flags);
+		QueueFamilyIndices getQueueFamilyIndices();
 
 	};
 }

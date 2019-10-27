@@ -1,4 +1,5 @@
 
+#include <cinttypes>
 //TODO Templatize
 namespace Hyperion::Math {
 
