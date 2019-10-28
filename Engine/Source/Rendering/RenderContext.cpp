@@ -34,10 +34,10 @@ namespace Hyperion::Rendering {
 				instanceExtensions.data()
 			)
 		);
-		VkSurfaceKHR surface;
+		VkSurfaceKHR surf;
 		//TODO ASSERT
-		glfwCreateWindowSurface(instance, window, nullptr, &surface);
-
+		glfwCreateWindowSurface(instance, window, nullptr, &surf);
+		surface = surf;
 #ifdef _DEBUG
 		Debug::setUpVulkanDebugging(instance);
 #endif
@@ -67,10 +67,11 @@ namespace Hyperion::Rendering {
 		transferQueue = device.getQueue(indices.transferIndex, indices.transferIndex == indices.graphicsIndex);
 		computeQueue = device.getQueue(indices.computeIndex, (indices.computeIndex == indices.graphicsIndex) + (indices.computeIndex == indices.transferIndex));
 
+		//TODO Check all Queue families? 
+		physDevice.getSurfaceSupportKHR(indices.graphicsIndex, surface);
 
 		vk::SurfaceFormatKHR surfaceFormat{};
 		vk::PresentModeKHR presentMode;
-		vk::Extent2D swapChainExtent;
 
 		vk::SurfaceCapabilitiesKHR surfaceCapabilites = physDevice.getSurfaceCapabilitiesKHR(surface);
 		if (surfaceCapabilites.maxImageCount && surfaceCapabilites.maxImageCount > videoSettings.imageCount)
@@ -106,7 +107,7 @@ namespace Hyperion::Rendering {
 				videoSettings.imageCount,
 				surfaceFormat.format,
 				surfaceFormat.colorSpace,
-				swapChainExtent,
+				videoSettings.resolution,
 				1,
 				vk::ImageUsageFlagBits::eColorAttachment, //TODO Check whether correct
 				vk::SharingMode::eExclusive,
@@ -124,9 +125,13 @@ namespace Hyperion::Rendering {
 	
 	RenderContext::~RenderContext()
 	{
+		device.destroySwapchainKHR(swapchain);
 		device.destroy();
+#ifdef _DEBUG
 		Debug::cleanUpVulkanDebugging(instance);
+#endif
 		
+		instance.destroySurfaceKHR(surface);
 		instance.destroy();
 		glfwDestroyWindow(window);
 		glfwTerminate();
