@@ -1,6 +1,6 @@
 #include "RenderContext.hpp"
 
-#include "Math/Utils.hpp"
+#include "Math/BitOperations.hpp"
 #include "System/Debug.hpp"
 
 namespace Hyperion::Rendering {

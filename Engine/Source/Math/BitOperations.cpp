@@ -1,4 +1,4 @@
-#include "Utils.hpp"
+#include "BitOperations.hpp"
 
 namespace Hyperion::Math {
 

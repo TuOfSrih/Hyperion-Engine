@@ -104,6 +104,7 @@
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\Source;$(VulkanSDK)\Include;$(VulkanSDK)\Third-Party\Include;$(GLFWDir32)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -126,6 +127,7 @@
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\Source;$(VulkanSDK)\Include;$(VulkanSDK)\Third-Party\Include;$(GLFWDir64)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -150,6 +152,7 @@
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\Source;$(VulkanSDK)\Include;$(VulkanSDK)\Third-Party\Include;$(GLFWDir32)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -176,6 +179,7 @@
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\Source;$(VulkanSDK)\Include;$(VulkanSDK)\Third-Party\Include;$(GLFWDir64)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -187,7 +191,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Source\Math\Utils.hpp" />
+    <ClInclude Include="..\..\..\Source\Cpp\AdvancedOperators.hpp" />
+    <ClInclude Include="..\..\..\Source\Cpp\Utils.hpp" />
+    <ClInclude Include="..\..\..\Source\Math\BitOperations.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\RenderContext.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\VideoSettings.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\VulkanAlias.hpp" />
@@ -195,16 +201,19 @@
     <ClInclude Include="..\..\..\Source\System\Application.hpp" />
     <ClInclude Include="..\..\..\Source\System\Configuration.hpp" />
     <ClInclude Include="..\..\..\Source\System\Debug.hpp" />
+    <ClInclude Include="..\..\..\Source\System\Thread.hpp" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Source\Math\Utils.cpp" />
+    <ClCompile Include="..\..\..\Source\Cpp\AdvancedOperators.cpp" />
+    <ClCompile Include="..\..\..\Source\Math\BitOperations.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\RenderContext.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\VideoSettings.cpp" />
     <ClCompile Include="..\..\..\Source\System\Application.cpp" />
     <ClCompile Include="..\..\..\Source\System\Configuration.cpp" />
     <ClCompile Include="..\..\..\Source\System\Debug.cpp" />
     <ClCompile Include="..\..\..\Source\System\HyperionMain.cpp" />
+    <ClCompile Include="..\..\..\Source\System\Thread.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
