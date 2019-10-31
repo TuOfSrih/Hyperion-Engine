@@ -62,19 +62,19 @@ namespace Hyperion::Rendering {
 			)
 		);
 
-		const QueueFamilyIndices indices = getQueueFamilyIndices();
-		graphicsQueue = device.getQueue(indices.graphicsIndex, 0);
-		transferQueue = device.getQueue(indices.transferIndex, indices.transferIndex == indices.graphicsIndex);
-		computeQueue = device.getQueue(indices.computeIndex, (indices.computeIndex == indices.graphicsIndex) + (indices.computeIndex == indices.transferIndex));
+		const QueueFamilyIndices queueIndices = getQueueFamilyIndices();
+		graphicsQueue = device.getQueue(queueIndices.graphicsIndex, 0);
+		transferQueue = device.getQueue(queueIndices.transferIndex, queueIndices.transferIndex == queueIndices.graphicsIndex);
+		computeQueue = device.getQueue(queueIndices.computeIndex, (queueIndices.computeIndex == queueIndices.graphicsIndex) + (queueIndices.computeIndex == queueIndices.transferIndex));
 
 		//TODO Check all Queue families? 
-		physDevice.getSurfaceSupportKHR(indices.graphicsIndex, surface);
+		physDevice.getSurfaceSupportKHR(queueIndices.graphicsIndex, surface);
 
 		vk::SurfaceFormatKHR surfaceFormat{};
 		vk::PresentModeKHR presentMode;
 
 		vk::SurfaceCapabilitiesKHR surfaceCapabilites = physDevice.getSurfaceCapabilitiesKHR(surface);
-		if (surfaceCapabilites.maxImageCount && surfaceCapabilites.maxImageCount > videoSettings.imageCount)
+		if (surfaceCapabilites.maxImageCount && surfaceCapabilites.maxImageCount < videoSettings.imageCount)
 			videoSettings.imageCount = static_cast<uint8_t>(surfaceCapabilites.maxImageCount);
 
 		//TODO Check whether something wasnt checked to be available and general digging into formats + colorspaces
@@ -120,11 +120,51 @@ namespace Hyperion::Rendering {
 				swapchain
 			)
 		);
+		swapchainImageViews.reserve(videoSettings.imageCount);
+		auto swapChainImages = device.getSwapchainImagesKHR(swapchain);
+		for (auto& image : swapChainImages) {
 
+			vk::ImageViewCreateInfo imageViewInfo{
+				{},
+				image,
+				vk::ImageViewType::e2D,
+				surfaceFormat.format,
+				{},
+				vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1}
+			};
+
+			swapchainImageViews.push_back(device.createImageView(imageViewInfo));
+		}
+
+		//TODO Correct Flag?
+		vk::CommandPoolCreateInfo graphicsPoolInfo{
+				vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+				queueIndices.graphicsIndex
+		};
+		for (int i = 0; i < videoSettings.imageCount; i++) 
+			graphicsCmdPools.push_back(device.createCommandPool(graphicsPoolInfo));
+
+		//TODO Maybe multiple pools?
+		vk::CommandPoolCreateInfo transferPoolInfo{
+				vk::CommandPoolCreateFlagBits::eTransient,
+				queueIndices.transferIndex
+		};
+		transferCmdPool = device.createCommandPool(transferPoolInfo);
+
+		//TODO Maybe multiple pools?
+		vk::CommandPoolCreateInfo computePoolInfo{
+				vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+				queueIndices.computeIndex
+		};
+		computeCmdPool = device.createCommandPool(computePoolInfo);
 	}
 	
 	RenderContext::~RenderContext()
 	{
+		device.destroyCommandPool(computeCmdPool);
+		device.destroyCommandPool(transferCmdPool);
+		for (auto& pool : graphicsCmdPools) device.destroyCommandPool(pool);
+		for (auto& imageView : swapchainImageViews) device.destroyImageView(imageView);
 		device.destroySwapchainKHR(swapchain);
 		device.destroy();
 #ifdef _DEBUG
@@ -295,6 +335,14 @@ namespace Hyperion::Rendering {
 
 		
 		return { graphics, transfer, compute };
+	}
+	const vk::Device & RenderContext::getDevice()
+	{
+		return device;
+	}
+	const VideoSettings & RenderContext::getVideoSettings()
+	{
+		return videoSettings;
 	}
 }
 

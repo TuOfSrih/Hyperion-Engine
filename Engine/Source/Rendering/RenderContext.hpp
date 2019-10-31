@@ -22,8 +22,10 @@ namespace Hyperion::Rendering {
 	class RenderContext {
 	public:
 		explicit RenderContext(const Configuration& config);
-
 		~RenderContext();
+
+		const vk::Device& getDevice();
+		const VideoSettings& getVideoSettings();
 
 	private:
 		const std::vector<const char*> instanceLayers = {
@@ -49,7 +51,12 @@ namespace Hyperion::Rendering {
 		vk::Queue computeQueue;
 		vk::Queue transferQueue;
 		vk::SurfaceKHR surface;
+		//TODO Separate class for swapchain?
 		vk::SwapchainKHR swapchain{};
+		std::vector<vk::ImageView> swapchainImageViews{};
+		std::vector<vk::CommandPool> graphicsCmdPools{};
+		vk::CommandPool transferCmdPool;
+		vk::CommandPool computeCmdPool;
 
 		VideoSettings videoSettings;
 

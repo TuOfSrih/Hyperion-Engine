@@ -1,3 +1,5 @@
+#pragma once
+
 #include <functional>
 
 //TODO Think of naming convections for Macros
