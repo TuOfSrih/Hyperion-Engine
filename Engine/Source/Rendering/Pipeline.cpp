@@ -24,88 +24,34 @@ namespace Hyperion::Rendering {
 	{
 		return pipelineCache;
 	}
+	RenderContext & PipelineHandler::getContext()
+	{
+		return context;
+	}
 	//TODO Should not exist
 	Pipeline::Pipeline()
 	{
 	}
-	Pipeline::Pipeline(RenderContext& context, PipelineHandler& pipelineHandler)
+	Pipeline::Pipeline(RenderContext & context, PipelineHandler & pipelineHandler): pipelineHandler(pipelineHandler)
 	{
 		const VideoSettings& videoSettings = context.getVideoSettings();
 		const vk::Device device = context.getDevice();
+		renderpass = getRenderPass();
 		const std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages = {
-			
+
 		};
-
-		const vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
-		
-		const vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo{
-				{},
-				vk::PrimitiveTopology::eTriangleList,
-				VK_FALSE
-		};
-
-		const vk::PipelineTessellationStateCreateInfo tesselationInfo{};
-
-		const vk::Viewport viewport{ 0, 0, static_cast<float>(videoSettings.resolution.width), 
-			static_cast<float>(videoSettings.resolution.height), 0, 1 };
-		const vk::Rect2D scissor{ {0, 0}, videoSettings.resolution };
-
-		const vk::PipelineViewportStateCreateInfo viewportInfo{
-				{},
-				1,
-				&viewport,
-				1,
-				&scissor
-		};
-
+		const vk::PipelineVertexInputStateCreateInfo vertexInputInfo = getVertexInputInfo();
+		const vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = getInputAssemblyInfo();
+		const vk::PipelineTessellationStateCreateInfo tesselationInfo = getTesselationInfo();
+		const vk::PipelineViewportStateCreateInfo viewportInfo = getViewportInfo();
 		//TODO Better abstraction over parameters
-		const vk::PipelineRasterizationStateCreateInfo rasterizationInfo{
-			{},
-			VK_FALSE,
-			VK_TRUE,
-			vk::PolygonMode::eFill,
-			vk::CullModeFlagBits::eBack,
-			vk::FrontFace::eClockwise,
-			VK_FALSE,
-		};
+		const vk::PipelineRasterizationStateCreateInfo rasterizationInfo = getRasterizationInfo();
+		const vk::PipelineMultisampleStateCreateInfo multisampleInfo = getMultiSampleInfo();
+		const vk::PipelineDepthStencilStateCreateInfo depthStencilInfo = getDepthStencilInfo();
+		const vk::PipelineColorBlendStateCreateInfo blendInfo = getBlendInfo();
+		const vk::PipelineDynamicStateCreateInfo dynamicStatesInfo = getDynamicStateInfo();
+		const vk::PipelineLayout pipelineLayout = getPipelineLayout();
 
-		const vk::PipelineMultisampleStateCreateInfo multisampleInfo{
-			{},
-			vk::SampleCountFlagBits::e1,
-		};
-
-		const vk::PipelineDepthStencilStateCreateInfo depthStencilInfo{ {}, VK_TRUE, VK_TRUE, vk::CompareOp::eLess, 
-			VK_FALSE, VK_FALSE, {}, {}, 0, 1 };
-
-		const vk::PipelineColorBlendAttachmentState blendAttachmentState{
-				VK_TRUE,
-				vk::BlendFactor::eSrc1Alpha,
-				vk::BlendFactor::eOneMinusSrc1Alpha,
-				vk::BlendOp::eAdd,
-				vk::BlendFactor::eOne,
-				vk::BlendFactor::eZero,
-				vk::BlendOp::eAdd,
-				vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA
-		};
-
-		const vk::PipelineColorBlendStateCreateInfo blendInfo{
-			{},
-			VK_TRUE,
-			vk::LogicOp::eNoOp,
-			1,
-			&blendAttachmentState,
-			{1, 1, 1, 1}
-		};
-
-		const std::array<vk::DynamicState, 2>  dynamicStates{vk::DynamicState::eViewport, vk::DynamicState::eScissor};
-
-		const vk::PipelineDynamicStateCreateInfo dynamicStatesInfo{
-			{}, dynamicStates.size(), dynamicStates.data()
-		};
-
-		vk::PipelineLayoutCreateInfo{
-
-		}
 
 		vk::GraphicsPipelineCreateInfo graphicsPipelineInfo{
 			{},//vk::PipelineCreateFlagBits::eAllowDerivatives,
@@ -120,8 +66,154 @@ namespace Hyperion::Rendering {
 			&depthStencilInfo,
 			&blendInfo,
 			&dynamicStatesInfo,
+			pipelineLayout,
+			renderpass,
+			//TODO Pipeline derivatives
 		};
 
 		pipeline = context.getDevice().createGraphicsPipeline(pipelineHandler.getPipelineCache(), graphicsPipelineInfo);
 	}
+
+	vk::PipelineVertexInputStateCreateInfo Pipeline::getVertexInputInfo() {
+
+		return vk::PipelineVertexInputStateCreateInfo{};
+	}
+
+	vk::PipelineInputAssemblyStateCreateInfo Pipeline::getInputAssemblyInfo() {
+
+		return vk::PipelineInputAssemblyStateCreateInfo{
+				{},
+				vk::PrimitiveTopology::eTriangleList,
+				VK_FALSE
+		};
+	}
+	
+	vk::PipelineTessellationStateCreateInfo Pipeline::getTesselationInfo () {
+
+		return vk::PipelineTessellationStateCreateInfo {
+
+		};
+	}
+
+	vk::PipelineViewportStateCreateInfo Pipeline::getViewportInfo() {
+
+		//const VideoSettings& videoSettings = pipelineHandler.getContext().getVideoSettings();
+
+		const vk::Viewport viewport{ 
+			0, 
+			0, 
+		/*	static_cast<float>(videoSettings.resolution.width),
+			static_cast<float>(videoSettings.resolution.height), 
+			0, 
+			1 */
+		};
+
+		const vk::Rect2D scissor{ {0, 0}, {}/*videoSettings.resolution*/ };
+
+		return vk::PipelineViewportStateCreateInfo{
+				{},
+				1,
+				&viewport,
+				1,
+				&scissor
+		};
+	}
+
+	vk::PipelineRasterizationStateCreateInfo Pipeline::getRasterizationInfo() {
+
+		return vk::PipelineRasterizationStateCreateInfo{
+			{},
+			VK_FALSE,
+			VK_TRUE,
+			vk::PolygonMode::eFill,
+			vk::CullModeFlagBits::eBack,
+			vk::FrontFace::eClockwise,
+			VK_FALSE,
+		};
+	}
+
+	vk::PipelineMultisampleStateCreateInfo Pipeline::getMultiSampleInfo() {
+
+		return vk::PipelineMultisampleStateCreateInfo{
+			{},
+			vk::SampleCountFlagBits::e1,
+		};
+	}
+
+	vk::PipelineDepthStencilStateCreateInfo Pipeline::getDepthStencilInfo() {
+
+		return vk::PipelineDepthStencilStateCreateInfo{ 
+			{},
+			VK_TRUE,
+			VK_TRUE,
+			vk::CompareOp::eLess,
+			VK_FALSE,
+			VK_FALSE,
+			{},
+			{},
+			0,
+			1
+		};
+	}
+
+	vk::PipelineColorBlendStateCreateInfo Pipeline::getBlendInfo() {
+
+		const vk::PipelineColorBlendAttachmentState blendAttachmentState{
+				VK_TRUE,
+				vk::BlendFactor::eSrc1Alpha,
+				vk::BlendFactor::eOneMinusSrc1Alpha,
+				vk::BlendOp::eAdd,
+				vk::BlendFactor::eOne,
+				vk::BlendFactor::eZero,
+				vk::BlendOp::eAdd,
+				vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA
+		};
+
+		return vk::PipelineColorBlendStateCreateInfo{
+			{},
+			VK_TRUE,
+			vk::LogicOp::eNoOp,
+			1,
+			&blendAttachmentState,
+			{1, 1, 1, 1}
+		};
+	}
+
+	vk::PipelineDynamicStateCreateInfo Pipeline::getDynamicStateInfo() {
+
+		const std::array<vk::DynamicState, 2>  dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+
+		return vk::PipelineDynamicStateCreateInfo{
+			{}, static_cast<uint32_t>(dynamicStates.size()), dynamicStates.data()
+		};
+	}
+
+	vk::PipelineLayout Pipeline::getPipelineLayout()
+	{
+		const vk::Device device = pipelineHandler.getContext().getDevice();
+
+		const vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
+			{}, //TODO Check whether this is correct
+
+		};
+		
+		vk::PipelineLayoutCreateInfo layoutInfo{
+
+		};
+		return device.createPipelineLayout(layoutInfo);
+	}
+
+	vk::RenderPass Pipeline::getRenderPass()
+	{
+		vk::RenderPassCreateInfo renderPassInfo{
+			{},
+			//static_cast<uint32_t>(attachmentDescriptions.size()),attachmentDescriptions.data(),
+
+		};
+
+		return pipelineHandler.getContext().getDevice().createRenderPass(renderPassInfo);
+	}
+
+	
+
 }

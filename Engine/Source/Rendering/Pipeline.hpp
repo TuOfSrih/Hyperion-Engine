@@ -3,6 +3,7 @@
 #include "vulkan/vulkan.hpp"
 
 #include "RenderContext.hpp"
+#include "Cpp/AdvancedOperators.hpp"
 
 namespace Hyperion::Rendering {
 
@@ -11,11 +12,26 @@ namespace Hyperion::Rendering {
 	class PipelineHandler;
 	class Pipeline{
 
+		PipelineHandler& pipelineHandler;
 		vk::Pipeline pipeline;
 		vk::RenderPass renderpass;
+
+		vk::RenderPass getRenderPass();
+		vk::PipelineVertexInputStateCreateInfo getVertexInputInfo();
+		vk::PipelineInputAssemblyStateCreateInfo getInputAssemblyInfo();
+		vk::PipelineTessellationStateCreateInfo getTesselationInfo();
+		vk::PipelineViewportStateCreateInfo getViewportInfo();
+		vk::PipelineRasterizationStateCreateInfo getRasterizationInfo();
+		vk::PipelineMultisampleStateCreateInfo getMultiSampleInfo();
+		vk::PipelineDepthStencilStateCreateInfo getDepthStencilInfo();
+		vk::PipelineColorBlendStateCreateInfo getBlendInfo();
+		vk::PipelineDynamicStateCreateInfo getDynamicStateInfo();
+		vk::PipelineLayout getPipelineLayout();
+		
 	public:
 		Pipeline();
 		Pipeline(RenderContext& context, PipelineHandler& pipelineHandler);
+		
 
 	};
 
@@ -32,6 +48,7 @@ namespace Hyperion::Rendering {
 		~PipelineHandler();
 
 		vk::PipelineCache& getPipelineCache();
+		RenderContext& getContext();
 		
 	};
 }
