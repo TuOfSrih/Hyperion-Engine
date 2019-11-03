@@ -7,6 +7,7 @@
 
 #include "System/Configuration.hpp"
 #include "Rendering/VideoSettings.hpp"
+#include "Rendering/Pipeline.hpp"
 
 
 namespace Hyperion::Rendering {
@@ -57,6 +58,7 @@ namespace Hyperion::Rendering {
 		std::vector<vk::CommandPool> graphicsCmdPools{};
 		vk::CommandPool transferCmdPool;
 		vk::CommandPool computeCmdPool;
+		//PipelineHandler pipelineHandler;
 
 		VideoSettings videoSettings;
 

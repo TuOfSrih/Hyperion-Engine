@@ -194,7 +194,7 @@
     <ClInclude Include="..\..\..\Source\Cpp\AdvancedOperators.hpp" />
     <ClInclude Include="..\..\..\Source\Cpp\Utils.hpp" />
     <ClInclude Include="..\..\..\Source\Math\BitOperations.hpp" />
-    <ClInclude Include="..\..\..\Source\Rendering\PipelineHandler.hpp" />
+    <ClInclude Include="..\..\..\Source\Rendering\Pipeline.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\RenderContext.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\VideoSettings.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\VulkanAlias.hpp" />
@@ -208,7 +208,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Cpp\AdvancedOperators.cpp" />
     <ClCompile Include="..\..\..\Source\Math\BitOperations.cpp" />
-    <ClCompile Include="..\..\..\Source\Rendering\PipeLineHandler.cpp" />
+    <ClCompile Include="..\..\..\Source\Rendering\Pipeline.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\RenderContext.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\VideoSettings.cpp" />
     <ClCompile Include="..\..\..\Source\System\Application.cpp" />
