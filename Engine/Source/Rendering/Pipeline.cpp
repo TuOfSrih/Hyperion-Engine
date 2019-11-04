@@ -3,38 +3,14 @@
 #include <array>
 
 namespace Hyperion::Rendering {
-
-	PipelineHandler::PipelineHandler(RenderContext& context) : context(context)
-	{
-		const vk::Device& device = context.getDevice();
-
-		vk::PipelineCacheCreateInfo cacheCreateInfo{};
-		pipelineCache = device.createPipelineCache(cacheCreateInfo);
-		
-		forwardPath = Pipeline{ context, *this };
-	}
-	PipelineHandler::~PipelineHandler()
-	{
-		const vk::Device device = context.getDevice();
-
-		//device.destroyPipeline(forwardPath);
-		device.destroyPipelineCache(pipelineCache);
-	}
-	vk::PipelineCache& PipelineHandler::getPipelineCache()
-	{
-		return pipelineCache;
-	}
-	RenderContext & PipelineHandler::getContext()
-	{
-		return context;
-	}
 	//TODO Should not exist
 	Pipeline::Pipeline()
 	{
 	}
-	Pipeline::Pipeline(RenderContext & context, PipelineHandler & pipelineHandler): pipelineHandler(pipelineHandler)
+	Pipeline::Pipeline(RenderContext & context, PipelineHandler* pipelineHandler): pipelineHandler(pipelineHandler)
 	{
 		const VideoSettings& videoSettings = context.getVideoSettings();
+		videoSettings.imageCount;
 		const vk::Device device = context.getDevice();
 		renderpass = getRenderPass();
 		const std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages = {
@@ -71,7 +47,7 @@ namespace Hyperion::Rendering {
 			//TODO Pipeline derivatives
 		};
 
-		pipeline = context.getDevice().createGraphicsPipeline(pipelineHandler.getPipelineCache(), graphicsPipelineInfo);
+		pipeline = context.getDevice().createGraphicsPipeline(pipelineHandler->getPipelineCache(), graphicsPipelineInfo);
 	}
 
 	vk::PipelineVertexInputStateCreateInfo Pipeline::getVertexInputInfo() {
@@ -190,10 +166,10 @@ namespace Hyperion::Rendering {
 
 	vk::PipelineLayout Pipeline::getPipelineLayout()
 	{
-		const vk::Device device = pipelineHandler.getContext().getDevice();
+		const vk::Device device = pipelineHandler->getContext().getDevice();
 
 		const vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{
-			{}, //TODO Check whether this is correct
+			//{}, //TODO Check whether this is correct
 
 		};
 		
@@ -206,14 +182,37 @@ namespace Hyperion::Rendering {
 	vk::RenderPass Pipeline::getRenderPass()
 	{
 		vk::RenderPassCreateInfo renderPassInfo{
-			{},
+			//{},
 			//static_cast<uint32_t>(attachmentDescriptions.size()),attachmentDescriptions.data(),
 
 		};
 
-		return pipelineHandler.getContext().getDevice().createRenderPass(renderPassInfo);
+		return pipelineHandler->getContext().getDevice().createRenderPass(renderPassInfo);
 	}
 
-	
+	PipelineHandler::PipelineHandler(RenderContext& context) : context(context)
+	{
+		const vk::Device& device = context.getDevice();
+
+		vk::PipelineCacheCreateInfo cacheCreateInfo{};
+		pipelineCache = device.createPipelineCache(cacheCreateInfo);
+
+		forwardPath = Pipeline{ context, this };
+	}
+	PipelineHandler::~PipelineHandler()
+	{
+		const vk::Device device = context.getDevice();
+
+		//device.destroyPipeline(forwardPath);
+		device.destroyPipelineCache(pipelineCache);
+	}
+	vk::PipelineCache& PipelineHandler::getPipelineCache()
+	{
+		return pipelineCache;
+	}
+	RenderContext & PipelineHandler::getContext()
+	{
+		return context;
+	}
 
 }

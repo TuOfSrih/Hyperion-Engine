@@ -12,7 +12,7 @@ namespace Hyperion::Rendering {
 	class PipelineHandler;
 	class Pipeline{
 
-		PipelineHandler& pipelineHandler;
+		PipelineHandler* pipelineHandler = nullptr;
 		vk::Pipeline pipeline;
 		vk::RenderPass renderpass;
 
@@ -30,8 +30,7 @@ namespace Hyperion::Rendering {
 		
 	public:
 		Pipeline();
-		Pipeline(RenderContext& context, PipelineHandler& pipelineHandler);
-		
+		Pipeline(RenderContext& context, PipelineHandler* pipelineHandler);
 
 	};
 
@@ -41,7 +40,6 @@ namespace Hyperion::Rendering {
 		vk::PipelineCache pipelineCache;
 		Pipeline forwardPath;
 
-		//vk::Pipeline createForwardPipeline(const vk::Device& device);
 	public:
 
 		PipelineHandler(RenderContext& context);
