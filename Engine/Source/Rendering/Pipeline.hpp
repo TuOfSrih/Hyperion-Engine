@@ -2,13 +2,11 @@
 
 #include "vulkan/vulkan.hpp"
 
-#include "RenderContext.hpp"
 #include "Cpp/AdvancedOperators.hpp"
 
 namespace Hyperion::Rendering {
 
 	//TODO Remove this weird definition
-	class RenderContext;
 	class PipelineHandler;
 	class Pipeline{
 
@@ -30,23 +28,21 @@ namespace Hyperion::Rendering {
 		
 	public:
 		Pipeline();
-		Pipeline(RenderContext& context, PipelineHandler* pipelineHandler);
+		Pipeline(PipelineHandler* pipelineHandler);
 
 	};
 
 	class PipelineHandler{
 
-		RenderContext& context;
 		vk::PipelineCache pipelineCache;
 		Pipeline forwardPath;
 
 	public:
 
-		PipelineHandler(RenderContext& context);
+		PipelineHandler();
 		~PipelineHandler();
 
 		vk::PipelineCache& getPipelineCache();
-		RenderContext& getContext();
 		
 	};
 }

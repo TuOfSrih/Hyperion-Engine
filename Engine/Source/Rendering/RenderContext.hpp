@@ -28,6 +28,11 @@ namespace Hyperion::Rendering {
 		const vk::Device& getDevice();
 		const VideoSettings& getVideoSettings();
 
+		
+		static RenderContext* active;
+		void setContext(RenderContext* newContext);
+		
+
 	private:
 		const std::vector<const char*> instanceLayers = {
 #ifdef _DEBUG
@@ -58,7 +63,7 @@ namespace Hyperion::Rendering {
 		std::vector<vk::CommandPool> graphicsCmdPools{};
 		vk::CommandPool transferCmdPool;
 		vk::CommandPool computeCmdPool;
-		//PipelineHandler pipelineHandler;
+		PipelineHandler pipelineHandler;
 
 		VideoSettings videoSettings;
 
@@ -68,4 +73,5 @@ namespace Hyperion::Rendering {
 		QueueFamilyIndices getQueueFamilyIndices();
 
 	};
+
 }

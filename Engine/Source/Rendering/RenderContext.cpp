@@ -5,9 +5,12 @@
 
 namespace Hyperion::Rendering {
 
+	RenderContext* RenderContext::active = nullptr;
+
 	//TODO Subdivide Function into multiple
 	Hyperion::Rendering::RenderContext::RenderContext(const Configuration& config)
 	{
+		setContext(this);
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		window = glfwCreateWindow(videoSettings.resolution.width, videoSettings.resolution.height, config.applicationName.c_str(), NULL, NULL);
@@ -157,6 +160,8 @@ namespace Hyperion::Rendering {
 				queueIndices.computeIndex
 		};
 		computeCmdPool = device.createCommandPool(computePoolInfo);
+
+		pipelineHandler = PipelineHandler{};
 	}
 	
 	RenderContext::~RenderContext()
@@ -343,6 +348,11 @@ namespace Hyperion::Rendering {
 	const VideoSettings & RenderContext::getVideoSettings()
 	{
 		return videoSettings;
+	}
+	void RenderContext::setContext(RenderContext * newContext)
+	{
+		if (active) throw std::exception("Overwriting Context");
+		active = newContext;
 	}
 }
 
