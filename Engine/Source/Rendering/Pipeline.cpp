@@ -18,6 +18,7 @@ namespace Hyperion::Rendering {
 		const std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages = {
 
 		};
+		const std::vector<Shader> shaderStages = getShaderInfo();
 		const vk::PipelineVertexInputStateCreateInfo vertexInputInfo = getVertexInputInfo();
 		const vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = getInputAssemblyInfo();
 		const vk::PipelineTessellationStateCreateInfo tesselationInfo = getTesselationInfo();
@@ -190,6 +191,11 @@ namespace Hyperion::Rendering {
 		};
 
 		return RenderContext::active->getDevice().createRenderPass(renderPassInfo);
+	}
+
+	std::vector<Shader> Pipeline::getShaderInfo()
+	{
+		return std::vector<Shader>();
 	}
 
 	PipelineHandler::PipelineHandler()

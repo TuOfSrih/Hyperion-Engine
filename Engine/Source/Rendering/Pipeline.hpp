@@ -2,6 +2,7 @@
 
 #include "vulkan/vulkan.hpp"
 
+#include "Shader.hpp"
 #include "Cpp/AdvancedOperators.hpp"
 
 namespace Hyperion::Rendering {
@@ -15,6 +16,7 @@ namespace Hyperion::Rendering {
 		vk::RenderPass renderpass;
 
 		vk::RenderPass getRenderPass();
+		std::vector<Shader> getShaderInfo();
 		vk::PipelineVertexInputStateCreateInfo getVertexInputInfo();
 		vk::PipelineInputAssemblyStateCreateInfo getInputAssemblyInfo();
 		vk::PipelineTessellationStateCreateInfo getTesselationInfo();
