@@ -3,9 +3,11 @@
 #include "Math/BitOperations.hpp"
 #include "System/Debug.hpp"
 
+#include <thread>
+
 namespace Hyperion::Rendering {
 
-	RenderContext* RenderContext::active = nullptr;
+	const RenderContext* RenderContext::active = nullptr;
 
 	//TODO Subdivide Function into multiple
 	Hyperion::Rendering::RenderContext::RenderContext(const Configuration& config)
@@ -27,10 +29,12 @@ namespace Hyperion::Rendering {
 			VK_MAKE_VERSION(1, 1, 121)
 		);
 
+		checkLayerSupport();
+
 		instance = vk::createInstance(
 			vk::InstanceCreateInfo(
-				{}, &appInfo,
-				//TODO better solution than casts?
+				{}, 
+				&appInfo,
 				static_cast<uint32_t>(instanceLayers.size()),
 				instanceLayers.data(),
 				static_cast<uint32_t>(instanceExtensions.size()),
@@ -42,17 +46,19 @@ namespace Hyperion::Rendering {
 		glfwCreateWindowSurface(instance, window, nullptr, &surf);
 		surface = surf;
 #ifdef _DEBUG
-		Debug::setUpVulkanDebugging(instance);
+		debugTools = Debug::VulkanTools(instance);
 #endif
 		
 
-		physDevice = pickGPU();
+		gpu = pickGPU();
 		//TODO Source of no portability, find better solution for finding out how many familites
-		std::vector<float> prios(physDevice.getQueueFamilyProperties().size());
+		std::vector<float> prios(gpu.getQueueFamilyProperties().size());
 		std::fill(prios.begin(), prios.end(), 1.0f);
 		std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos = getQueueCreateInfo(prios);
 		vk::PhysicalDeviceFeatures deviceFeatures = getDeviceFeatures();
-		device = physDevice.createDevice(
+
+		checkDeviceExtensionSupport();
+		device = gpu.createDevice(
 			vk::DeviceCreateInfo(
 				vk::DeviceCreateFlags(),
 				static_cast<uint32_t>(queueCreateInfos.size()),
@@ -71,17 +77,17 @@ namespace Hyperion::Rendering {
 		computeQueue = device.getQueue(queueIndices.computeIndex, (queueIndices.computeIndex == queueIndices.graphicsIndex) + (queueIndices.computeIndex == queueIndices.transferIndex));
 
 		//TODO Check all Queue families? 
-		physDevice.getSurfaceSupportKHR(queueIndices.graphicsIndex, surface);
+		gpu.getSurfaceSupportKHR(queueIndices.graphicsIndex, surface);
 
 		vk::SurfaceFormatKHR surfaceFormat{};
 		vk::PresentModeKHR presentMode;
 
-		vk::SurfaceCapabilitiesKHR surfaceCapabilites = physDevice.getSurfaceCapabilitiesKHR(surface);
-		if (surfaceCapabilites.maxImageCount && surfaceCapabilites.maxImageCount < videoSettings.imageCount)
-			videoSettings.imageCount = static_cast<uint8_t>(surfaceCapabilites.maxImageCount);
+		vk::SurfaceCapabilitiesKHR surfaceCapabilites = gpu.getSurfaceCapabilitiesKHR(surface);
+		if (surfaceCapabilites.maxImageCount && surfaceCapabilites.maxImageCount < videoSettings.bufferImageCount)
+			videoSettings.bufferImageCount = static_cast<uint8_t>(surfaceCapabilites.maxImageCount);
 
 		//TODO Check whether something wasnt checked to be available and general digging into formats + colorspaces
-		std::vector<vk::SurfaceFormatKHR> surfaceFormats{ physDevice.getSurfaceFormatsKHR(surface) };
+		std::vector<vk::SurfaceFormatKHR> surfaceFormats{ gpu.getSurfaceFormatsKHR(surface) };
 		for (auto& format : surfaceFormats) {
 
 			if (format.format == vk::Format::eB8G8R8A8Unorm && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
@@ -89,7 +95,7 @@ namespace Hyperion::Rendering {
 		}
 		//What if not found?
 
-		std::vector<vk::PresentModeKHR> presentModes{ physDevice.getSurfacePresentModesKHR(surface)};
+		std::vector<vk::PresentModeKHR> presentModes{ gpu.getSurfacePresentModesKHR(surface)};
 		if (std::find(presentModes.cbegin(), presentModes.cend(), vk::PresentModeKHR::eMailbox) == presentModes.end()) {
 			
 			presentMode = vk::PresentModeKHR::eFifo;
@@ -107,7 +113,7 @@ namespace Hyperion::Rendering {
 			vk::SwapchainCreateInfoKHR(
 				{},
 				surface,
-				videoSettings.imageCount,
+				videoSettings.bufferImageCount,
 				surfaceFormat.format,
 				surfaceFormat.colorSpace,
 				videoSettings.resolution,
@@ -123,7 +129,7 @@ namespace Hyperion::Rendering {
 				swapchain
 			)
 		);
-		swapchainImageViews.reserve(videoSettings.imageCount);
+		swapchainImageViews.reserve(videoSettings.bufferImageCount);
 		auto swapChainImages = device.getSwapchainImagesKHR(swapchain);
 		for (auto& image : swapChainImages) {
 
@@ -138,42 +144,20 @@ namespace Hyperion::Rendering {
 
 			swapchainImageViews.push_back(device.createImageView(imageViewInfo));
 		}
+		//TODO Fix
+		cmdPoolController = System::Memory::CommandPoolController(std::thread::hardware_concurrency() + 1, queueIndices);
 
-		//TODO Correct Flag?
-		vk::CommandPoolCreateInfo graphicsPoolInfo{
-				vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
-				queueIndices.graphicsIndex
-		};
-		for (int i = 0; i < videoSettings.imageCount; i++) 
-			graphicsCmdPools.push_back(device.createCommandPool(graphicsPoolInfo));
-
-		//TODO Maybe multiple pools?
-		vk::CommandPoolCreateInfo transferPoolInfo{
-				vk::CommandPoolCreateFlagBits::eTransient,
-				queueIndices.transferIndex
-		};
-		transferCmdPool = device.createCommandPool(transferPoolInfo);
-
-		//TODO Maybe multiple pools?
-		vk::CommandPoolCreateInfo computePoolInfo{
-				vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
-				queueIndices.computeIndex
-		};
-		computeCmdPool = device.createCommandPool(computePoolInfo);
-
-		pipelineHandler = PipelineHandler{};
+		pipelineHandler = PipelineHandler{device};
 	}
 	
 	RenderContext::~RenderContext()
 	{
-		device.destroyCommandPool(computeCmdPool);
-		device.destroyCommandPool(transferCmdPool);
-		for (auto& pool : graphicsCmdPools) device.destroyCommandPool(pool);
+		
 		for (auto& imageView : swapchainImageViews) device.destroyImageView(imageView);
 		device.destroySwapchainKHR(swapchain);
 		device.destroy();
 #ifdef _DEBUG
-		Debug::cleanUpVulkanDebugging(instance);
+		debugTools.~VulkanTools();
 #endif
 		
 		instance.destroySurfaceKHR(surface);
@@ -215,6 +199,86 @@ namespace Hyperion::Rendering {
 		}
 
 		return bestGPU;
+	}
+
+	//TODO Review C++ bindings style
+	void RenderContext::checkLayerSupport()
+	{
+		uint32_t amountSupportedValidationLayers = 0;
+		vkEnumerateInstanceLayerProperties(&amountSupportedValidationLayers, nullptr);
+
+		std::vector<VkLayerProperties> supportedValidationLayerProperties(amountSupportedValidationLayers);
+		vkEnumerateInstanceLayerProperties(&amountSupportedValidationLayers, supportedValidationLayerProperties.data());
+
+
+		for (const char* layer : instanceLayers) {
+
+			bool found = false;
+			for (const VkLayerProperties layerProperties : supportedValidationLayerProperties) {
+
+				if (!strcmp(layer, layerProperties.layerName)) {
+
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+
+				Debug::missingSupport("An extension was not supported!");
+			}
+		}
+	}
+
+	void RenderContext::checkInstanceExtensionSupport()
+	{
+		uint32_t amountSupportedExtensions = 0;
+		vkEnumerateInstanceExtensionProperties(nullptr, &amountSupportedExtensions, nullptr);
+
+		std::vector<VkExtensionProperties> supportedExtensionProperties(amountSupportedExtensions);
+		vkEnumerateInstanceExtensionProperties(nullptr, &amountSupportedExtensions, supportedExtensionProperties.data());
+
+		for (const char* extension : instanceExtensions) {
+
+			bool found = false;
+			for (const VkExtensionProperties extensionProperties : supportedExtensionProperties) {
+
+				if (!strcmp(extension, extensionProperties.extensionName)) {
+
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+
+				Debug::missingSupport("An extension was not supported!");
+			}
+		}
+	}
+
+	void RenderContext::checkDeviceExtensionSupport()
+	{
+		uint32_t amountSupportedDeviceExtensions = 0;
+		vkEnumerateDeviceExtensionProperties(gpu, nullptr, &amountSupportedDeviceExtensions, nullptr);
+
+		std::vector<VkExtensionProperties>supportedExtensionProperties(amountSupportedDeviceExtensions);
+		vkEnumerateDeviceExtensionProperties(gpu, nullptr, &amountSupportedDeviceExtensions, supportedExtensionProperties.data());
+
+		for (const char* extension : deviceExtensions) {
+
+			bool found = false;
+			for (const VkExtensionProperties extensionProperties : supportedExtensionProperties) {
+
+				if (!strcmp(extension, extensionProperties.extensionName)) {
+
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+
+				Debug::missingSupport("An extension was not supported!");
+			}
+		}
 	}
 
 	std::vector<vk::DeviceQueueCreateInfo> RenderContext::getQueueCreateInfo(const std::vector<float>& prios)
@@ -276,9 +340,9 @@ namespace Hyperion::Rendering {
 		return vk::PhysicalDeviceFeatures(features);
 	}
 
-	QueueFamilyIndices RenderContext::getQueueFamilyIndices()
+	const QueueFamilyIndices RenderContext::getQueueFamilyIndices() const
 	{
-		std::vector<vk::QueueFamilyProperties> props = physDevice.getQueueFamilyProperties();
+		std::vector<vk::QueueFamilyProperties> props = gpu.getQueueFamilyProperties();
 		uint32_t graphics, transfer, compute;
 		graphics = transfer = compute = std::numeric_limits<uint32_t>::max();
 		int maxDist = std::numeric_limits<int>::max();
@@ -341,17 +405,45 @@ namespace Hyperion::Rendering {
 		
 		return { graphics, transfer, compute };
 	}
-	const vk::Device & RenderContext::getDevice()
+	const vk::CommandPool& RenderContext::getGraphicsPool(const int threadID, const int bufferImageIndex) const
+	{
+		return cmdPoolController.getGraphicsPool(threadID, bufferImageIndex);
+	}
+	const vk::CommandPool& RenderContext::getTransferPool() const
+	{
+		return cmdPoolController.getTransferPool();
+	}
+	const vk::CommandPool& RenderContext::getComputePool() const
+	{
+		return cmdPoolController.getComputePool();
+	}
+	const vk::Device & RenderContext::getDevice() const 
 	{
 		return device;
 	}
-	const VideoSettings & RenderContext::getVideoSettings()
+	const vk::PhysicalDevice& RenderContext::getGPU() const
+	{
+		return gpu;
+	}
+	const VideoSettings & RenderContext::getVideoSettings() const
 	{
 		return videoSettings;
 	}
+	const vk::Queue& RenderContext::getGraphicsQueue() const
+	{
+		return graphicsQueue;
+	}
+	const vk::Queue& RenderContext::getComputeQueue() const
+	{
+		return computeQueue;
+	}
+	const vk::Queue& RenderContext::getTransferQueue() const
+	{
+		return transferQueue;
+	}
 	void RenderContext::setContext(RenderContext * newContext)
 	{
-		if (active) throw std::exception("Overwriting Context");
+		ASSERT(active == nullptr);
 		active = newContext;
 	}
 }

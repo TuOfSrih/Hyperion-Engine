@@ -16,7 +16,7 @@ namespace Hyperion::Rendering {
 		vk::RenderPass renderpass;
 
 		vk::RenderPass getRenderPass();
-		std::vector<Shader> getShaderInfo();
+		std::vector<vk::PipelineShaderStageCreateInfo> getShaderInfo();
 		vk::PipelineVertexInputStateCreateInfo getVertexInputInfo();
 		vk::PipelineInputAssemblyStateCreateInfo getInputAssemblyInfo();
 		vk::PipelineTessellationStateCreateInfo getTesselationInfo();
@@ -41,7 +41,8 @@ namespace Hyperion::Rendering {
 
 	public:
 
-		PipelineHandler();
+		PipelineHandler() = default;
+		PipelineHandler(const vk::Device& device);
 		~PipelineHandler();
 
 		vk::PipelineCache& getPipelineCache();

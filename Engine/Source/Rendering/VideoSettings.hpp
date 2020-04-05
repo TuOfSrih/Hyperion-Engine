@@ -7,6 +7,6 @@ namespace Hyperion::Rendering {
 
 	public:
 		vk::Extent2D resolution{ 1920, 1080 };
-		uint8_t imageCount = 3;
+		uint8_t bufferImageCount = 3;
 	};
 }

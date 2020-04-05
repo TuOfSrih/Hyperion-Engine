@@ -5,31 +5,39 @@
 #include "vulkan/vulkan.hpp"
 #include "GLFW/glfw3.h"
 
+#include "Queue.hpp"
 #include "System/Configuration.hpp"
 #include "Rendering/VideoSettings.hpp"
 #include "Rendering/Pipeline.hpp"
+#include "System/Debug.hpp"
+#include "System/Memory.hpp"
+#include "System/CommandPoolController.hpp"
 
 
 namespace Hyperion::Rendering {
 
 	//TODO Subdivide into Context + VulkanContext
-	class QueueFamilyIndices {
-	public:
-		const uint32_t graphicsIndex;
-		const uint32_t transferIndex;
-		const uint32_t computeIndex;
-	};
-
 	class RenderContext {
 	public:
 		explicit RenderContext(const Configuration& config);
 		~RenderContext();
 
-		const vk::Device& getDevice();
-		const VideoSettings& getVideoSettings();
+		const vk::Device& getDevice() const ;
+		const vk::PhysicalDevice& getGPU() const;
+		const VideoSettings& getVideoSettings() const;
+
+		const vk::Queue& getGraphicsQueue() const;
+		const vk::Queue& getComputeQueue() const;
+		const vk::Queue& getTransferQueue() const;
+
+		const QueueFamilyIndices getQueueFamilyIndices() const;
+
+		const vk::CommandPool& getGraphicsPool(const int threadID, const int bufferImageIndex) const;
+		const vk::CommandPool& getTransferPool() const;
+		const vk::CommandPool& getComputePool() const;
 
 		
-		static RenderContext* active;
+		static const RenderContext* active;
 		void setContext(RenderContext* newContext);
 		
 
@@ -51,8 +59,9 @@ namespace Hyperion::Rendering {
 
 		vk::Instance instance;
 		GLFWwindow* window;
-		vk::PhysicalDevice physDevice;
+		vk::PhysicalDevice gpu;
 		vk::Device device;
+
 		vk::Queue graphicsQueue;
 		vk::Queue computeQueue;
 		vk::Queue transferQueue;
@@ -60,17 +69,23 @@ namespace Hyperion::Rendering {
 		//TODO Separate class for swapchain?
 		vk::SwapchainKHR swapchain{};
 		std::vector<vk::ImageView> swapchainImageViews{};
-		std::vector<vk::CommandPool> graphicsCmdPools{};
-		vk::CommandPool transferCmdPool;
-		vk::CommandPool computeCmdPool;
+
+		System::Memory::CommandPoolController cmdPoolController;
+
+#ifdef _DEBUG
+		Debug::VulkanTools debugTools;
+#endif
+
 		PipelineHandler pipelineHandler;
 
 		VideoSettings videoSettings;
 
 		vk::PhysicalDevice pickGPU();
+		void checkLayerSupport();
+		void checkInstanceExtensionSupport();
+		void checkDeviceExtensionSupport();
 		std::vector<vk::DeviceQueueCreateInfo> getQueueCreateInfo(const std::vector<float>& prios);
 		vk::PhysicalDeviceFeatures getDeviceFeatures();
-		QueueFamilyIndices getQueueFamilyIndices();
 
 	};
 

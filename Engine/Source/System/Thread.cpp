@@ -47,7 +47,7 @@ namespace Hyperion::System {
 		if (thread.joinable()) thread.join();
 	}
 
-	Thread::Thread(TaskScheduler& scheduler) : scheduler(scheduler), thread(std::thread([this]() {taskLoop(); }))
+	Thread::Thread(TaskScheduler& scheduler) : scheduler(scheduler), thread(std::thread([this](int threadNumber) {Thread::threadNum = threadNumber;  taskLoop(); }, ++threadCounter))
 	{
 	}
 
@@ -55,4 +55,7 @@ namespace Hyperion::System {
 	{
 		wait();
 	}
+
+	int Thread::threadCounter = 1;
+	thread_local int Thread::threadNum = 0;
 }

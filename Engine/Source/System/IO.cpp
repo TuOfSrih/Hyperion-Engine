@@ -10,7 +10,7 @@ namespace Hyperion::System::IO {
 		//TODO Error Handling
 		if (!file) {
 
-			std::cerr << "Could not open shader!" << std::endl;
+			std::cerr << "Could not open binary file!" << std::endl;
 			throw std::runtime_error("Could not open shaderfile!");
 		}
 

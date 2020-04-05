@@ -12,13 +12,10 @@ namespace Hyperion::Rendering {
 	Pipeline::Pipeline(PipelineHandler* pipelineHandler): pipelineHandler(pipelineHandler)
 	{
 		const VideoSettings& videoSettings = RenderContext::active->getVideoSettings();
-		videoSettings.imageCount;
+		videoSettings.bufferImageCount;
 		const vk::Device device = RenderContext::active->getDevice();
 		renderpass = getRenderPass();
-		const std::array<vk::PipelineShaderStageCreateInfo, 2> shaderStages = {
-
-		};
-		const std::vector<Shader> shaderStages = getShaderInfo();
+		const std::vector<vk::PipelineShaderStageCreateInfo> shaderStages = getShaderInfo();
 		const vk::PipelineVertexInputStateCreateInfo vertexInputInfo = getVertexInputInfo();
 		const vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = getInputAssemblyInfo();
 		const vk::PipelineTessellationStateCreateInfo tesselationInfo = getTesselationInfo();
@@ -47,6 +44,10 @@ namespace Hyperion::Rendering {
 			&dynamicStatesInfo,
 			pipelineLayout,
 			renderpass,
+			0,
+			pipeline,
+			0
+
 			//TODO Pipeline derivatives
 		};
 
@@ -193,14 +194,13 @@ namespace Hyperion::Rendering {
 		return RenderContext::active->getDevice().createRenderPass(renderPassInfo);
 	}
 
-	std::vector<Shader> Pipeline::getShaderInfo()
+	std::vector<vk::PipelineShaderStageCreateInfo> Pipeline::getShaderInfo()
 	{
-		return std::vector<Shader>();
+		return std::vector<vk::PipelineShaderStageCreateInfo>();
 	}
 
-	PipelineHandler::PipelineHandler()
+	PipelineHandler::PipelineHandler(const vk::Device& device)
 	{
-		const vk::Device& device = RenderContext::active->getDevice();
 
 		vk::PipelineCacheCreateInfo cacheCreateInfo{};
 		pipelineCache = device.createPipelineCache(cacheCreateInfo);

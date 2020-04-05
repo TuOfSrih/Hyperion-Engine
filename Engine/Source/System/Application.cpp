@@ -10,5 +10,6 @@ Hyperion::Application::Application(): context(Rendering::RenderContext(config))
 
 void Hyperion::Application::run()
 {
-	//while (true);
+	while (true);
+
 }
