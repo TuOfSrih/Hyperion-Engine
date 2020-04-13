@@ -13,6 +13,7 @@ namespace Hyperion::Rendering {
 	Hyperion::Rendering::RenderContext::RenderContext(const Configuration& config)
 	{
 		setContext(this);
+		//assert
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		window = glfwCreateWindow(videoSettings.resolution.width, videoSettings.resolution.height, config.applicationName.c_str(), NULL, NULL);
@@ -75,6 +76,21 @@ namespace Hyperion::Rendering {
 		graphicsQueue = device.getQueue(queueIndices.graphicsIndex, 0);
 		transferQueue = device.getQueue(queueIndices.transferIndex, queueIndices.transferIndex == queueIndices.graphicsIndex);
 		computeQueue = device.getQueue(queueIndices.computeIndex, (queueIndices.computeIndex == queueIndices.graphicsIndex) + (queueIndices.computeIndex == queueIndices.transferIndex));
+
+		vk::CommandPool pool = device.createCommandPool(
+			vk::CommandPoolCreateInfo(
+				vk::CommandPoolCreateFlagBits::eTransient,
+				queueIndices.transferIndex
+			)
+		);
+
+		vk::CommandBuffer cmdBuf = device.allocateCommandBuffers(
+			vk::CommandBufferAllocateInfo(
+				pool, 
+				vk::CommandBufferLevel::ePrimary,
+				1
+			)
+		).at(0);
 
 		//TODO Check all Queue families? 
 		gpu.getSurfaceSupportKHR(queueIndices.graphicsIndex, surface);
@@ -146,8 +162,7 @@ namespace Hyperion::Rendering {
 		}
 		//TODO Fix
 		cmdPoolController = System::Memory::CommandPoolController(std::thread::hardware_concurrency() + 1, queueIndices);
-
-		pipelineHandler = PipelineHandler{device};
+		pipelineHandler = PipelineHandler(device);
 	}
 	
 	RenderContext::~RenderContext()

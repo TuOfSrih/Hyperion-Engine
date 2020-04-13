@@ -35,7 +35,9 @@ namespace Hyperion::System::Memory {
 
 	private:
 		vk::DeviceMemory memory;
-		vk::DeviceSize size;
+		vk::DeviceSize dataSize;
+		//TODO Remove allocationsize
+		vk::DeviceSize allocationSize;
 		vk::Buffer handle;
 
 		Status status;

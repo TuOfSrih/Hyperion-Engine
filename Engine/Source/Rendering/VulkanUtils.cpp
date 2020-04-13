@@ -27,9 +27,13 @@ namespace Hyperion::Rendering::Vulkan {
 	{
 		const vk::Device& device = RenderContext::active->getDevice();
 
+		auto test = Rendering::RenderContext::active->getGraphicsPool(0, 0);
+		(void)test;
 		vk::CommandBuffer cmdBuffer = device.allocateCommandBuffers(
 			{
-				Rendering::RenderContext::active->getTransferPool()
+				Rendering::RenderContext::active->getTransferPool(),
+				vk::CommandBufferLevel::ePrimary,
+				1
 			}
 		).at(0);
 

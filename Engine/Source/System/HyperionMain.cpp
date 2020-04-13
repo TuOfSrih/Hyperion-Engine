@@ -9,6 +9,7 @@
 
 int main()
 {
+
 	Hyperion::Application app;
 	Hyperion::Rendering::MeshInstance object({}, Hyperion::Rendering::PrimitiveType::Cube);
 	

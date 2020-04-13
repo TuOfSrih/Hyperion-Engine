@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <VulkanSDK>C:\VulkanSDK\1.1.121.2</VulkanSDK>
+    <VulkanSDK>C:\VulkanSDK\1.1.106.0</VulkanSDK>
     <glmDir>$(VulkanSDK)\Third-Party\Include</glmDir>
     <GLFWDir32>C:\GLFW\glfw-3.3.bin.WIN32</GLFWDir32>
     <GLFWDir64>C:\GLFW\glfw-3.3.bin.WIN64</GLFWDir64>

@@ -23,17 +23,19 @@ namespace Hyperion::System::Memory {
 		status = Status::VALID;
 
 		if (size > 0) {
+			vk::MemoryRequirements memRequirements = device.getBufferMemoryRequirements(handle);
+			allocationSize = std::max(memRequirements.size, size);
 			memory = device.allocateMemory(
 				vk::MemoryAllocateInfo{
-					size,
-					findMemoryTypeIndex(device.getBufferMemoryRequirements(handle).memoryTypeBits, memoryPropertyFlags)
+					allocationSize,
+					findMemoryTypeIndex(memRequirements.memoryTypeBits, memoryPropertyFlags)
 				}
 			);
 
 			device.bindBufferMemory(handle, memory, 0);
 
 			status = Status::ALLOCATED;
-		}
+		} else allocationSize = 0;
 		
 		if (data != nullptr) {
 
@@ -41,6 +43,7 @@ namespace Hyperion::System::Memory {
 			device.mapMemory(memory, 0, size, {}, &dataCopy);
 			std::memcpy(dataCopy, data, static_cast<size_t>(size));
 			device.unmapMemory(memory);
+
 			status = Status::FILLED;
 		}
 
@@ -59,6 +62,8 @@ namespace Hyperion::System::Memory {
 
 	VulkanBuffer& VulkanBuffer::operator=(const VulkanBuffer& other) {
 
+		
+
 		const vk::Device& device = Rendering::RenderContext::active->getDevice();
 		vk::CommandBuffer buffer = Hyperion::Rendering::Vulkan::simpleExecuteTransfer([this, &other](const vk::CommandBuffer& cmdBuffer) {
 				cmdBuffer.copyBuffer(
@@ -67,7 +72,7 @@ namespace Hyperion::System::Memory {
 					{
 						0, 
 						0, 
-						other.size
+						other.dataSize
 					}
 				);
 			}
@@ -75,17 +80,27 @@ namespace Hyperion::System::Memory {
 		//Todo Implement proper handler with callback
 		Rendering::RenderContext::active->getTransferQueue().waitIdle();
 		device.freeCommandBuffers(Rendering::RenderContext::active->getTransferPool(), 1, &buffer);
-		throw std::exception();
+
+		return *this;
 	}
 
 	VulkanBuffer& VulkanBuffer::operator=(VulkanBuffer&& other) {
 
-		this->~VulkanBuffer();
+		if (this != &other) {
 
-		size = other.size;
-		memory = other.memory;
-		handle = other.handle;
-		status = other.status;
+			this->~VulkanBuffer();
+
+			dataSize = other.dataSize;
+			memory = other.memory;
+			handle = other.handle;
+			status = other.status;
+
+			other.dataSize = 0;
+			other.memory = vk::DeviceMemory();
+			other.handle = vk::Buffer();
+			other.status = Status::INVALID;
+		}
+		
 		
 		return *this;
 	}

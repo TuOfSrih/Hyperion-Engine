@@ -11,17 +11,19 @@ namespace Hyperion::System::Memory {
 		graphicsPools.reserve(totalPools);
 		for (int i = 0; i < totalPools; ++i) {
 
-			device.createCommandPool(
-				vk::CommandPoolCreateInfo{
-					{},
-					queueFamilyIndices.graphicsIndex
-				}
+			graphicsPools.emplace_back(
+				device.createCommandPool(
+					vk::CommandPoolCreateInfo{
+						{},
+						queueFamilyIndices.graphicsIndex
+					}
+				)
 			);
 		}
 
 		transferPool = device.createCommandPool(
 			vk::CommandPoolCreateInfo{
-				{},
+				{},//vk::CommandPoolCreateFlagBits::eTransient,
 				queueFamilyIndices.transferIndex
 			}
 		);
@@ -40,6 +42,27 @@ namespace Hyperion::System::Memory {
 		device.destroyCommandPool(computePool);
 		device.destroyCommandPool(transferPool);
 		for (auto& pool : graphicsPools) device.destroyCommandPool(pool);
+	}
+	CommandPoolController::CommandPoolController(CommandPoolController&& other)
+	{
+		*this = std::move(other);
+	}
+	CommandPoolController& CommandPoolController::operator=(CommandPoolController&& other)
+	{
+		this->~CommandPoolController();
+
+		if (this != &other) {
+
+			this->graphicsPools = std::move(other.graphicsPools);
+			this->transferPool = std::move(other.transferPool);
+			this->computePool = std::move(other.computePool);
+
+			other.graphicsPools.clear();
+			other.transferPool = vk::CommandPool();
+			other.computePool = vk::CommandPool();
+		}
+
+		return *this;
 	}
 	const vk::CommandPool& CommandPoolController::getGraphicsPool(const int threadID, const int bufferImageIndex) const
 	{

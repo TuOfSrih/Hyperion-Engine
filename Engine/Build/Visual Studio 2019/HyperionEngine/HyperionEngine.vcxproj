@@ -23,32 +23,32 @@
     <ProjectGuid>{B2F57BEF-68C4-4579-9C1A-FCF49C5EAD04}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>HyperionEngine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -103,7 +103,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Third-Party\Include\glm;$(SolutionDir)..\..\..\Source;$(Vulkan_SDK)\Include;$(Vulkan_SDK)\Third-Party\Include;$(GLFWDir32)\include;%(AdditionalIncludeDirectories);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\Source;$(Vulkan_SDK)\Include;$(Vulkan_SDK)\Third-Party\Include\glm;$(GLFWDir32)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
@@ -126,7 +126,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Third-Party\Include\glm;$(SolutionDir)..\..\..\Source;$(Vulkan_SDK)\Include;$(Vulkan_SDK)\Third-Party\Include;$(GLFWDir64)\include;%(AdditionalIncludeDirectories);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\Source;$(Vulkan_SDK)\Include;$(Vulkan_SDK)\Third-Party\Include\glm;$(GLFWDir64)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
@@ -151,7 +151,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Third-Party\Include\glm;$(SolutionDir)..\..\..\Source;$(Vulkan_SDK)\Include;$(Vulkan_SDK)\Third-Party\Include;$(GLFWDir32)\include;%(AdditionalIncludeDirectories);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\Source;$(Vulkan_SDK)\Include;$(Vulkan_SDK)\Third-Party\Include\glm;$(GLFWDir32)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
@@ -178,7 +178,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Third-Party\Include\glm;$(SolutionDir)..\..\..\Source;$(Vulkan_SDK)\Include;$(Vulkan_SDK)\Third-Party\Include;$(GLFWDir64)\include;%(AdditionalIncludeDirectories);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..\Source;$(Vulkan_SDK)\Include;$(Vulkan_SDK)\Third-Party\Include\glm;$(GLFWDir64)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
@@ -192,11 +192,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Cpp\AdvancedOperators.hpp" />
-    <ClInclude Include="..\..\..\Source\Cpp\Types.hpp" />
     <ClInclude Include="..\..\..\Source\Cpp\Utils.hpp" />
     <ClInclude Include="..\..\..\Source\Math\BitOperations.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Mesh.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Pipeline.hpp" />
+    <ClInclude Include="..\..\..\Source\Rendering\Primitives.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Queue.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\RenderContext.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Shader.hpp" />
@@ -215,10 +215,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Cpp\AdvancedOperators.cpp" />
-    <ClCompile Include="..\..\..\Source\Cpp\Types.cpp" />
     <ClCompile Include="..\..\..\Source\Math\BitOperations.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Mesh.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Pipeline.cpp" />
+    <ClCompile Include="..\..\..\Source\Rendering\Primitives.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\RenderContext.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Shader.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\VideoSettings.cpp" />

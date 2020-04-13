@@ -11,8 +11,9 @@ namespace Hyperion::System::Memory {
 		CommandPoolController() = default;
 		CommandPoolController(const int threadCount, const Rendering::QueueFamilyIndices& queueFamilyIndices);
 		~CommandPoolController();
-		defaultMove(CommandPoolController);
 		noCopy(CommandPoolController);
+		declMove(CommandPoolController);
+		
 
 		const vk::CommandPool& getGraphicsPool(const int threadID, const int bufferImageIndex) const;
 		const vk::CommandPool& getTransferPool() const;
