@@ -15,8 +15,7 @@ namespace Hyperion::Rendering {
 		setContext(this);
 		//assert
 		glfwInit();
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		window = glfwCreateWindow(videoSettings.resolution.width, videoSettings.resolution.height, config.applicationName.c_str(), NULL, NULL);
+		
 
 		uint32_t count;
 		const char** glfwExt = glfwGetRequiredInstanceExtensions(&count);
@@ -42,10 +41,7 @@ namespace Hyperion::Rendering {
 				instanceExtensions.data()
 			)
 		);
-		VkSurfaceKHR surf;
-		//TODO ASSERT
-		glfwCreateWindowSurface(instance, window, nullptr, &surf);
-		surface = surf;
+		
 #ifdef _DEBUG
 		debugTools = Debug::VulkanTools(instance);
 #endif
@@ -77,89 +73,8 @@ namespace Hyperion::Rendering {
 		transferQueue = device.getQueue(queueIndices.transferIndex, queueIndices.transferIndex == queueIndices.graphicsIndex);
 		computeQueue = device.getQueue(queueIndices.computeIndex, (queueIndices.computeIndex == queueIndices.graphicsIndex) + (queueIndices.computeIndex == queueIndices.transferIndex));
 
-		vk::CommandPool pool = device.createCommandPool(
-			vk::CommandPoolCreateInfo(
-				vk::CommandPoolCreateFlagBits::eTransient,
-				queueIndices.transferIndex
-			)
-		);
-
-		vk::CommandBuffer cmdBuf = device.allocateCommandBuffers(
-			vk::CommandBufferAllocateInfo(
-				pool, 
-				vk::CommandBufferLevel::ePrimary,
-				1
-			)
-		).at(0);
-
-		//TODO Check all Queue families? 
-		gpu.getSurfaceSupportKHR(queueIndices.graphicsIndex, surface);
-
-		vk::SurfaceFormatKHR surfaceFormat{};
-		vk::PresentModeKHR presentMode;
-
-		vk::SurfaceCapabilitiesKHR surfaceCapabilites = gpu.getSurfaceCapabilitiesKHR(surface);
-		if (surfaceCapabilites.maxImageCount && surfaceCapabilites.maxImageCount < videoSettings.bufferImageCount)
-			videoSettings.bufferImageCount = static_cast<uint8_t>(surfaceCapabilites.maxImageCount);
-
-		//TODO Check whether something wasnt checked to be available and general digging into formats + colorspaces
-		std::vector<vk::SurfaceFormatKHR> surfaceFormats{ gpu.getSurfaceFormatsKHR(surface) };
-		for (auto& format : surfaceFormats) {
-
-			if (format.format == vk::Format::eB8G8R8A8Unorm && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
-				surfaceFormat = format;
-		}
-		//What if not found?
-
-		std::vector<vk::PresentModeKHR> presentModes{ gpu.getSurfacePresentModesKHR(surface)};
-		if (std::find(presentModes.cbegin(), presentModes.cend(), vk::PresentModeKHR::eMailbox) == presentModes.end()) {
-			
-			presentMode = vk::PresentModeKHR::eFifo;
-		}
-		else {
-
-			presentMode = vk::PresentModeKHR::eMailbox;
-		}
-
-		videoSettings.resolution = { std::clamp(videoSettings.resolution.width, surfaceCapabilites.minImageExtent.width, surfaceCapabilites.maxImageExtent.width),
-			std::clamp(videoSettings.resolution.height, surfaceCapabilites.minImageExtent.height, surfaceCapabilites.maxImageExtent.height) 
-		};
-
-		swapchain = device.createSwapchainKHR(
-			vk::SwapchainCreateInfoKHR(
-				{},
-				surface,
-				videoSettings.bufferImageCount,
-				surfaceFormat.format,
-				surfaceFormat.colorSpace,
-				videoSettings.resolution,
-				1,
-				vk::ImageUsageFlagBits::eColorAttachment, //TODO Check whether correct
-				vk::SharingMode::eExclusive,
-				0,
-				nullptr,
-				vk::SurfaceTransformFlagBitsKHR::eIdentity,
-				vk::CompositeAlphaFlagBitsKHR::eOpaque,
-				presentMode,
-				VK_TRUE,	// TODO Check, whether this option is unproblematic
-				swapchain
-			)
-		);
-		swapchainImageViews.reserve(videoSettings.bufferImageCount);
-		auto swapChainImages = device.getSwapchainImagesKHR(swapchain);
-		for (auto& image : swapChainImages) {
-
-			vk::ImageViewCreateInfo imageViewInfo{
-				{},
-				image,
-				vk::ImageViewType::e2D,
-				surfaceFormat.format,
-				{},
-				vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1}
-			};
-
-			swapchainImageViews.push_back(device.createImageView(imageViewInfo));
-		}
+		swapchain = Swapchain(config, videoSettings, queueIndices);
+		
 		//TODO Fix
 		cmdPoolController = System::Memory::CommandPoolController(std::thread::hardware_concurrency() + 1, queueIndices);
 		pipelineHandler = PipelineHandler(device);
@@ -167,17 +82,16 @@ namespace Hyperion::Rendering {
 	
 	RenderContext::~RenderContext()
 	{
-		
-		for (auto& imageView : swapchainImageViews) device.destroyImageView(imageView);
-		device.destroySwapchainKHR(swapchain);
+		pipelineHandler.~PipelineHandler();
+		cmdPoolController.~CommandPoolController();
+		swapchain.~Swapchain();
 		device.destroy();
 #ifdef _DEBUG
 		debugTools.~VulkanTools();
 #endif
 		
-		instance.destroySurfaceKHR(surface);
+		
 		instance.destroy();
-		glfwDestroyWindow(window);
 		glfwTerminate();
 		
 	}
@@ -435,6 +349,10 @@ namespace Hyperion::Rendering {
 	const vk::Device & RenderContext::getDevice() const 
 	{
 		return device;
+	}
+	const vk::Instance& RenderContext::getInstance() const
+	{
+		return instance;
 	}
 	const vk::PhysicalDevice& RenderContext::getGPU() const
 	{
