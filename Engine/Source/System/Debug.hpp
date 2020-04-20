@@ -27,11 +27,14 @@ namespace Hyperion::Debug {
 		vk::DebugUtilsMessengerEXT debugMessenger;
 	};
 
-	void missingSupport(const char* message);
+	
+	__declspec(noreturn) void missingSupport(const char* message);
 
-	void missingFunctionality(const char* message);
+	__declspec(noreturn) void missingFunctionality(const char* message);
 
-	void failAssertion(const char* exp, const char* file, const int line);
+	__declspec(noreturn) void failAssertion(const char* exp, const char* file, const int line);
+
+	__declspec(noreturn) void runtimeError(const char* message);
 
 }
 

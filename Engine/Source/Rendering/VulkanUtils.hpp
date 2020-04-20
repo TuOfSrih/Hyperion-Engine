@@ -4,6 +4,9 @@
 #include <functional>
 
 #include "vulkan/vulkan.hpp"
+
+#include "Queue.hpp"
+
 namespace Hyperion::Rendering::Vulkan {
 
 	class SharingInfo {
@@ -21,5 +24,8 @@ namespace Hyperion::Rendering::Vulkan {
 		std::vector<uint32_t> queueIndices;
 	};
 
+	vk::CommandBuffer simpleExecute(const QueueTypeInfo& queueInfo, const std::function<void(const vk::CommandBuffer& cmdBuffer)>& func);
+	vk::CommandBuffer simpleExecuteGraphics(const std::function<void(const vk::CommandBuffer& cmdBuffer)>& func);
+	vk::CommandBuffer simpleExecuteCompute(const std::function<void(const vk::CommandBuffer& cmdBuffer)>& func);
 	vk::CommandBuffer simpleExecuteTransfer(const std::function<void(const vk::CommandBuffer& cmdBuffer)>& func);
 }

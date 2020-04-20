@@ -23,15 +23,13 @@ namespace Hyperion::Rendering::Vulkan {
 	{
 		return queueIndices.size();
 	}
-	vk::CommandBuffer simpleExecuteTransfer(const std::function<void(const vk::CommandBuffer& cmdBuffer)>& func)
+	vk::CommandBuffer simpleExecute(const QueueTypeInfo& queueInfo, const std::function<void(const vk::CommandBuffer& cmdBuffer)>& func)
 	{
 		const vk::Device& device = RenderContext::active->getDevice();
 
-		auto test = Rendering::RenderContext::active->getGraphicsPool(0, 0);
-		(void)test;
 		vk::CommandBuffer cmdBuffer = device.allocateCommandBuffers(
 			{
-				Rendering::RenderContext::active->getTransferPool(),
+				queueInfo.getCommandPool(),
 				vk::CommandBufferLevel::ePrimary,
 				1
 			}
@@ -56,13 +54,25 @@ namespace Hyperion::Rendering::Vulkan {
 			0,
 			nullptr
 		};
-		RenderContext::active->getTransferQueue().submit(
+		queueInfo.getQueue().submit(
 			1,
 			&submitInfo,
 			{}
 		);
-		
+
 		return cmdBuffer;
+	}
+	vk::CommandBuffer simpleExecuteGraphics(const std::function<void(const vk::CommandBuffer& cmdBuffer)>& func)
+	{
+		return simpleExecute(QueueType::GRAPHICS, func);
+	}
+	vk::CommandBuffer simpleExecuteCompute(const std::function<void(const vk::CommandBuffer& cmdBuffer)>& func)
+	{
+		return simpleExecute(QueueType::COMPUTE, func);
+	}
+	vk::CommandBuffer simpleExecuteTransfer(const std::function<void(const vk::CommandBuffer& cmdBuffer)>& func)
+	{
+		return simpleExecute(QueueType::TRANSFER, func);
 	}
 }
 

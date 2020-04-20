@@ -75,7 +75,6 @@ namespace Hyperion::Rendering {
 
 		swapchain = Swapchain(config, videoSettings, queueIndices);
 		
-		//TODO Fix
 		cmdPoolController = System::Memory::CommandPoolController(std::thread::hardware_concurrency() + 1, queueIndices);
 		pipelineHandler = PipelineHandler(device);
 	}
@@ -333,6 +332,10 @@ namespace Hyperion::Rendering {
 
 		
 		return { graphics, transfer, compute };
+	}
+	const vk::CommandPool& RenderContext::getCurrentGraphicsPool() const
+	{
+		return getGraphicsPool(System::Thread::threadNum, swapchain.getBufferImageIndex());
 	}
 	const vk::CommandPool& RenderContext::getGraphicsPool(const int threadID, const int bufferImageIndex) const
 	{

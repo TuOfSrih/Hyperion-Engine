@@ -2,7 +2,28 @@
 
 #include <inttypes.h>
 
+#include "vulkan/vulkan.hpp"
+
 namespace Hyperion::Rendering {
+
+	enum class QueueType : uint8_t {
+		INVALID = 0,
+		GRAPHICS,
+		COMPUTE,
+		TRANSFER
+	};
+
+	class QueueTypeInfo {
+	public:
+		QueueTypeInfo() : type(QueueType::INVALID) {};
+		QueueTypeInfo(const QueueType& type) : type(type) {};
+
+		const vk::Queue& getQueue() const;
+		const vk::CommandPool& getCommandPool() const;
+
+	private:
+		QueueType type;
+	};
 
 	class QueueFamilyIndices {
 	public:

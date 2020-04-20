@@ -219,6 +219,7 @@
     <ClCompile Include="..\..\..\Source\Rendering\Mesh.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Pipeline.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Primitives.cpp" />
+    <ClCompile Include="..\..\..\Source\Rendering\Queue.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\RenderContext.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Shader.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Swapchain.cpp" />

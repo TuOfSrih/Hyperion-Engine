@@ -13,6 +13,7 @@
 #include "System/Memory.hpp"
 #include "Swapchain.hpp"
 #include "System/CommandPoolController.hpp"
+#include "System/Thread.hpp"
 
 
 namespace Hyperion::Rendering {
@@ -34,6 +35,7 @@ namespace Hyperion::Rendering {
 
 		const QueueFamilyIndices getQueueFamilyIndices() const;
 
+		const vk::CommandPool& getCurrentGraphicsPool() const;
 		const vk::CommandPool& getGraphicsPool(const int threadID, const int bufferImageIndex) const;
 		const vk::CommandPool& getTransferPool() const;
 		const vk::CommandPool& getComputePool() const;

@@ -80,4 +80,8 @@ namespace Hyperion::Debug {
 		ss << "Assertion " << exp << "failed in " << file << "at line " << line;
 		throw std::exception(ss.str().c_str());
 	}
+	void runtimeError(const char* message)
+	{
+		throw std::exception(message);
+	}
 }
