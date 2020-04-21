@@ -1,19 +1,19 @@
 #pragma once
 
-#include <vector>
-
-#include "vulkan/vulkan.hpp"
-#include "GLFW/glfw3.h"
-
 #include "Queue.hpp"
-#include "System/Configuration.hpp"
-#include "Rendering/VideoSettings.hpp"
+#include "Swapchain.hpp"
+#include "VideoSettings.hpp"
+
+#include "System/CommandPoolController.hpp"
 #include "Rendering/Pipeline.hpp"
+#include "System/Configuration.hpp"
 #include "System/Debug.hpp"
 #include "System/Memory.hpp"
-#include "Swapchain.hpp"
-#include "System/CommandPoolController.hpp"
 #include "System/Thread.hpp"
+
+#include "vulkan/vulkan.hpp"
+
+#include <vector>
 
 
 namespace Hyperion::Rendering {

@@ -1,7 +1,10 @@
 #pragma once
 
-#include "Rendering/Queue.hpp"
 #include "Debug.hpp"
+#include "Rendering/Queue.hpp"
+
+#include <vector>
+
 
 namespace Hyperion::System::Memory {
 

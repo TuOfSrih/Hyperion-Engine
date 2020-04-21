@@ -1,8 +1,9 @@
 #pragma once
 
+#include "vulkan/vulkan.hpp"
+
 #include <inttypes.h>
 
-#include "vulkan/vulkan.hpp"
 
 namespace Hyperion::Rendering {
 

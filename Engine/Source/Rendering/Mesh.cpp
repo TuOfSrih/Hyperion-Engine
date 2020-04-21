@@ -1,3 +1,4 @@
+
 #include "Mesh.hpp"
 
 namespace Hyperion::Rendering {

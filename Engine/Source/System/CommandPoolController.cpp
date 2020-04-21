@@ -1,6 +1,8 @@
+
 #include "CommandPoolController.hpp"
 
 #include "Rendering/RenderContext.hpp"
+#include "Rendering/Queue.hpp"
 
 namespace Hyperion::System::Memory {
 

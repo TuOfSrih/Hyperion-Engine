@@ -1,11 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <functional>
+#include "Queue.hpp"
 
 #include "vulkan/vulkan.hpp"
 
-#include "Queue.hpp"
+#include <vector>
+#include <functional>
+
 
 namespace Hyperion::Rendering::Vulkan {
 

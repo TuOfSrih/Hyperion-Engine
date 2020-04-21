@@ -2,6 +2,9 @@
 
 #include "vulkan/vulkan.hpp"
 
+#include <inttypes.h>
+
+
 namespace Hyperion::Rendering {
 
 	class VideoSettings {

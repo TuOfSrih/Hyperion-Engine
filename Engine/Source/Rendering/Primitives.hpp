@@ -2,6 +2,7 @@
 
 #include "Rendering/Mesh.hpp"
 
+
 namespace Hyperion::Rendering {
 
 	class Primitive {

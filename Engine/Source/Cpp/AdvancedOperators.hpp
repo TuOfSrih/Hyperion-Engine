@@ -2,6 +2,7 @@
 
 #include <functional>
 
+
 //TODO Think of naming convections for Macros
 #define noCopy(className) className(const className& other) = delete;\
 className& operator=(const className& other) = delete;

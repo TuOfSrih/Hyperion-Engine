@@ -1,11 +1,12 @@
 #pragma once 
 
+#include "Cpp/AdvancedOperators.hpp"
+
 #include <thread>
 #include <queue>
 #include <mutex>
 #include <condition_variable>
 
-#include "Cpp/AdvancedOperators.hpp"
 
 namespace Hyperion::System {
 

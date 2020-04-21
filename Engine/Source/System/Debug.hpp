@@ -1,7 +1,8 @@
 #pragma once
 
-#include "vulkan/vulkan.hpp"
 #include "Cpp/AdvancedOperators.hpp"
+
+#include "vulkan/vulkan.hpp"
 
 
 #ifdef _DEBUG
@@ -9,7 +10,6 @@
 #else
 #define ASSERT(EXPR) ((void)0)
 #endif
-
 
 
 namespace Hyperion::Debug {

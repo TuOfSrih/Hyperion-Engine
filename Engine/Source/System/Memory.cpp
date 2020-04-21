@@ -1,6 +1,8 @@
+
 #include "Memory.hpp"
-#include "Rendering/RenderContext.hpp"
+
 #include "System/Debug.hpp"
+#include "Rendering/RenderContext.hpp"
 
 namespace Hyperion::System::Memory {
 	

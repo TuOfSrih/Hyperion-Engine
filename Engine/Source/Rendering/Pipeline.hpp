@@ -1,9 +1,11 @@
 #pragma once
 
+#include "Shader.hpp"
+
+#include "Cpp/AdvancedOperators.hpp"
+
 #include "vulkan/vulkan.hpp"
 
-#include "Shader.hpp"
-#include "Cpp/AdvancedOperators.hpp"
 
 namespace Hyperion::Rendering {
 

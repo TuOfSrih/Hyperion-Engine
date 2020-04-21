@@ -1,13 +1,12 @@
 #pragma once
 
-#include <vector>
-
-#include "vulkan/vulkan.hpp"
-#include "Rendering/Queue.hpp"
-#include "Rendering/RenderContext.hpp"
 #include "Rendering/VulkanUtils.hpp"
 #include "Cpp/AdvancedOperators.hpp"
 #include "Cpp/Types.hpp"
+
+#include "vulkan/vulkan.hpp"
+
+#include <vector>
 
 
 namespace Hyperion::System::Memory {
@@ -144,9 +143,7 @@ namespace Hyperion::System::Memory {
 			const vk::SampleCountFlagBits sampleFlags,
 			const vk::ImageUsageFlags imageUsageFlags,
 			const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{})
-			: GPUDimResource(data, size, {}, vk::ImageType::e2D, format, { extent, 1 }, 1, 1, mipLevels, 1, sampleFlags, imageUsageFlags, sharingInfo) {};
+			: GPUDimResource(data, size, {}, vk::ImageType::e2D, format, vk::Extent3D(extent, 1), mipLevels, 1, sampleFlags, imageUsageFlags, sharingInfo) {};
 	};
-	}
-
 	
 }

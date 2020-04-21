@@ -1,8 +1,9 @@
+
 #include "Pipeline.hpp"
 
-#include <array>
-
 #include "RenderContext.hpp"
+
+#include <array>
 
 namespace Hyperion::Rendering {
 	//TODO Should not exist

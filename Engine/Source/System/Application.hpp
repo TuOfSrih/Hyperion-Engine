@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Configuration.hpp"
+
 #include "System/Thread.hpp"
 #include "Rendering/RenderContext.hpp"
-#include "Configuration.hpp"
+
 
 namespace Hyperion {
 

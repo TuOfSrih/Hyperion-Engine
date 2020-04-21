@@ -2,6 +2,7 @@
 
 #include <string>
 
+
 namespace Hyperion {
 
 	//TODO: Maybe make versioning work at compiletime
