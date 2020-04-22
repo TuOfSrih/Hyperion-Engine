@@ -18,12 +18,11 @@ namespace Hyperion::Debug {
 	public:
 		VulkanTools() = default;
 		VulkanTools(const vk::Instance& instance);
-		defaultMove(VulkanTools);
+		declMove(VulkanTools);
 		noCopy(VulkanTools);
 		~VulkanTools();
 		
 	private:
-		vk::Instance instance;
 		vk::DebugUtilsMessengerEXT debugMessenger;
 	};
 

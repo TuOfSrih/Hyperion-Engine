@@ -110,15 +110,18 @@ namespace Hyperion::System::Memory {
 		ResourceStatus status;
 
 	protected:
-		void copyFrom(VulkanDimResource&& other, const vk::ImageLayout thisLayout, const vk::ImageLayout otherLayout, const std::vector<vk::ImageCopy>& imageCopies);
-		void copyFrom(VulkanBuffer&& other, const vk::ImageLayout thisLayout, const std::vector<vk::BufferImageCopy>& bufferImageCopies);
+		void copyFrom(const VulkanDimResource& other, const vk::ImageLayout thisLayout, const vk::ImageLayout otherLayout, const std::vector<vk::ImageCopy>& imageCopies);
+		void copyFrom(const VulkanBuffer& other, const vk::ImageLayout thisLayout, const std::vector<vk::BufferImageCopy>& bufferImageCopies);
 
 		void changeLayout(const Rendering::QueueTypeInfo& queueInfo, const vk::ImageLayout& oldLayout, const vk::ImageLayout& newLayout, const vk::ImageSubresourceRange& subresourceRange);
+
+		vk::ImageLayout currentLayout = vk::ImageLayout::ePreinitialized;
 
 	};
 
 	class GPUDimResource : public VulkanDimResource {
 	public:
+		GPUDimResource() = default;
 		GPUDimResource(
 			const void* data,
 			const vk::DeviceSize size,
@@ -131,19 +134,13 @@ namespace Hyperion::System::Memory {
 			const vk::SampleCountFlagBits sampleFlags,
 			const vk::ImageUsageFlags imageUsageFlags,
 			const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{});
+
+		noCopy(GPUDimResource);
+		defaultMove(GPUDimResource);
+		virtual ~GPUDimResource() = default;
+		
 	};
 
-	class Image2D : public GPUDimResource{
-		Image2D(
-			const void* data,
-			const vk::DeviceSize size,
-			const vk::Format format,
-			const vk::Extent2D& extent,
-			uint32_t mipLevels,
-			const vk::SampleCountFlagBits sampleFlags,
-			const vk::ImageUsageFlags imageUsageFlags,
-			const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{})
-			: GPUDimResource(data, size, {}, vk::ImageType::e2D, format, vk::Extent3D(extent, 1), mipLevels, 1, sampleFlags, imageUsageFlags, sharingInfo) {};
-	};
+	
 	
 }

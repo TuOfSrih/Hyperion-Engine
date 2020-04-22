@@ -1,6 +1,8 @@
 
 #include "Debug.hpp"
 
+#include "Rendering/RenderContext.hpp"
+
 #include <array>
 #include <iostream>
 #include <unordered_map>
@@ -26,13 +28,14 @@ namespace Hyperion::Debug {
 		(void)messageType;
 		(void*)pUserData;
 
-		std::cout << "VALIDATION LAYER - " << debugUtilsMessageSeverityNames.at(messageSeverity) <<": " << pCallbackData->pMessage << std::endl << std::endl;
+		if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) 
+			std::cout << "VALIDATION LAYER - " << debugUtilsMessageSeverityNames.at(messageSeverity) <<": " << pCallbackData->pMessage << std::endl << std::endl;
 		return VK_FALSE;
 	}
 
 
 	//TODO Review C++ bindings style + Check messenger setup
-	VulkanTools::VulkanTools(const vk::Instance& instance): instance(instance)
+	VulkanTools::VulkanTools(const vk::Instance& instance)
 	{
 		auto createFunc = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 
@@ -59,12 +62,30 @@ namespace Hyperion::Debug {
 		if(createFunc(instance, &debugCreateInfo, nullptr, &messenger)) Debug::missingFunctionality("Failed to create Vulkan debug messenger");
 		debugMessenger = vk::DebugUtilsMessengerEXT(messenger);
 	}
+
+	VulkanTools::VulkanTools(VulkanTools&& other) {
+		*this = std::move(other);
+	}
+
+	VulkanTools& VulkanTools::operator=(VulkanTools&& other) {
+
+		debugMessenger = std::move(other.debugMessenger);
+		other.debugMessenger = vk::DebugUtilsMessengerEXT();
+
+		return *this;
+	}
+
 	VulkanTools::~VulkanTools()
 	{
-		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-		if (func != nullptr) {
-			func(instance, debugMessenger, nullptr);
+		const vk::Instance& instance = Rendering::RenderContext::active->getInstance();
+		if (debugMessenger != vk::DebugUtilsMessengerEXT{}) {
+
+			auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+			if (func != nullptr) {
+				func(instance, debugMessenger, nullptr);
+			}
 		}
+		
 	}
 	void missingSupport(const char* message)
 	{

@@ -175,7 +175,7 @@ namespace Hyperion::System::Memory {
 			sharingInfo.getSharingMode(),
 			static_cast<uint32_t>(sharingInfo.getAmount()),
 			sharingInfo.getIndices(),
-			vk::ImageLayout::ePreinitialized // vs undefined, especially for GPU Resource
+			currentLayout // vs undefined, especially for GPU Resource
 		});
 		status = ResourceStatus::VALID;
 
@@ -232,7 +232,7 @@ namespace Hyperion::System::Memory {
 	}
 
 
-	void VulkanDimResource::copyFrom(VulkanDimResource&& other, const vk::ImageLayout thisLayout, const vk::ImageLayout otherLayout, const std::vector<vk::ImageCopy>& imageCopies)
+	void VulkanDimResource::copyFrom(const VulkanDimResource& other, const vk::ImageLayout thisLayout, const vk::ImageLayout otherLayout, const std::vector<vk::ImageCopy>& imageCopies)
 	{
 		const vk::Device& device = Rendering::RenderContext::active->getDevice();
 		ASSERT(status >= ResourceStatus::ALLOCATED);
@@ -251,7 +251,7 @@ namespace Hyperion::System::Memory {
 		device.freeCommandBuffers(Rendering::RenderContext::active->getTransferPool(), 1, &buffer);
 	}
 
-	void VulkanDimResource::copyFrom(VulkanBuffer&& other, const vk::ImageLayout thisLayout, const std::vector<vk::BufferImageCopy>& bufferImageCopies)
+	void VulkanDimResource::copyFrom(const VulkanBuffer& other, const vk::ImageLayout thisLayout, const std::vector<vk::BufferImageCopy>& bufferImageCopies)
 	{
 		const vk::Device& device = Rendering::RenderContext::active->getDevice();
 		ASSERT(status >= ResourceStatus::ALLOCATED);
@@ -324,7 +324,7 @@ namespace Hyperion::System::Memory {
 		uint32_t mipLevels,
 		uint32_t arrayLayers,
 		const vk::SampleCountFlagBits sampleFlags,
-		const vk::ImageUsageFlags imageUsageFlags,
+		const vk::ImageUsageFlags imageUsageFlags,//Check Image Tiling with optimal and linear
 		const Rendering::Vulkan::SharingInfo& sharingInfo) : VulkanDimResource(createFlags, type, format, extent, mipLevels, arrayLayers, sampleFlags, vk::ImageTiling::eOptimal, imageUsageFlags, vk::MemoryPropertyFlagBits::eDeviceLocal) {
 
 		if (data != nullptr) {

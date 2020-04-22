@@ -10,7 +10,7 @@ namespace Hyperion::Rendering {
 
 	const Mesh* GetPrimitive(PrimitiveType type)
 	{
-		//TODO Add remaining Primitives
+		//TODO Add remaining Primitives + Add Cleanup
 		switch (type) {
 
 		case PrimitiveType::Cube:

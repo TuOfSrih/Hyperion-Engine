@@ -78,6 +78,9 @@
     <ClInclude Include="..\..\..\Source\Rendering\Swapchain.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Source\Rendering\Image2D.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -138,6 +141,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Source\Rendering\Queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Source\Rendering\Image2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -197,6 +197,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Cpp\AdvancedOperators.hpp" />
     <ClInclude Include="..\..\..\Source\Math\BitOperations.hpp" />
+    <ClInclude Include="..\..\..\Source\Rendering\Image2D.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Mesh.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Pipeline.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Primitives.hpp" />
@@ -220,6 +221,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Cpp\AdvancedOperators.cpp" />
     <ClCompile Include="..\..\..\Source\Math\BitOperations.cpp" />
+    <ClCompile Include="..\..\..\Source\Rendering\Image2D.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Mesh.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Pipeline.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Primitives.cpp" />
