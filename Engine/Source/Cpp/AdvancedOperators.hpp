@@ -30,8 +30,13 @@ className& operator=(const className& other);
 #define declMove(className) className(className&& other);\
 className& operator=(className&& other);
 
+
+#define declMoveOnly(className) noCopy(className)\
+declMove(className)
+
 #define declAllTouch(className) declCopy(className)\
 declMove(className)
+
 
 namespace Hyperion::Cpp {
 

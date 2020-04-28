@@ -76,7 +76,7 @@ namespace Hyperion::Rendering {
 		swapchain = Swapchain(config, videoSettings, queueIndices);
 		
 		cmdPoolController = System::Memory::CommandPoolController(std::thread::hardware_concurrency() + 1, queueIndices);
-		pipelineHandler = PipelineHandler(device);
+		pipelineHandler = PipelineHandler(config);
 	}
 	
 	RenderContext::~RenderContext()

@@ -18,6 +18,8 @@
 
 namespace Hyperion::Rendering {
 
+	vk::FrontFace RenderOrder = vk::FrontFace::eClockwise;//Collect somewhere? TODO
+
 	//TODO Subdivide into Context + VulkanContext
 	class RenderContext {
 	public:

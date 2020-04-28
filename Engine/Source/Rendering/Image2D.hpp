@@ -47,6 +47,11 @@ namespace Hyperion::Rendering {
 		defaultMove(RenderTarget);
 
 		~RenderTarget() = default;
+
+		virtual vk::AttachmentDescription getAttachmentDescription() const override;
+
+		static const vk::ImageLayout defaultRenderTargetLayout = vk::ImageLayout::eColorAttachmentOptimal;
+
 	};
 
 	//Put SharingInfo into Template
@@ -63,7 +68,22 @@ namespace Hyperion::Rendering {
 		defaultMove(DepthBuffer);
 
 		~DepthBuffer() = default;
+
+		virtual vk::AttachmentDescription getAttachmentDescription() const override;
+
+		static const vk::ImageLayout defaultDepthStencilLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 	};
 
+	class Texture {
+
+	};
+
+	class FrameBufferAttachment {
+	public:
+
+		virtual vk::AttachmentDescription getAttachmentDescription() const = 0;
+		virtual vk::ImageLayout getReadLayout() const = 0;
+		virtual vk::DescriptorSetLayout getDescriptorSetLayout() const = 0;
+	};
 
 }

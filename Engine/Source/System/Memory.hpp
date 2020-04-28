@@ -60,17 +60,31 @@ namespace Hyperion::System::Memory {
 			const vk::BufferUsageFlags& usageFlags,
 			const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{});
 	};
-	
-	class VertexBuffer : public GPUBuffer{
+
+	class StridedBuffer : GPUBuffer {
 	public:
-		VertexBuffer(const void* data, const vk::DeviceSize& size, const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{})
-			: GPUBuffer(data, size, vk::BufferUsageFlagBits::eVertexBuffer, sharingInfo) {};
+		StridedBuffer(const void* data, 
+			const vk::DeviceSize& size,
+			uint32_t stride,
+			const vk::BufferUsageFlags& usageFlags,
+			const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{})
+			: GPUBuffer(data, size, usageFlags, sharingInfo), stride(stride) {};
+
+		uint32_t getStride() const { return stride; };
+	protected:
+		uint32_t stride;
+	};
+	
+	class VertexBuffer : public StridedBuffer {
+	public:
+		VertexBuffer(const void* data, const vk::DeviceSize& size, uint32_t stride, const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{})
+			: StridedBuffer(data, size, stride, vk::BufferUsageFlagBits::eVertexBuffer, sharingInfo) {};
 	};
 
-	class IndexBuffer : public GPUBuffer{
+	class IndexBuffer : public StridedBuffer {
 	public:
-		IndexBuffer(const void* data, const vk::DeviceSize& size, const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{})
-			: GPUBuffer(data, size, vk::BufferUsageFlagBits::eIndexBuffer, sharingInfo) {};
+		IndexBuffer(const void* data, const vk::DeviceSize& size, uint32_t stride, const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{})
+			: StridedBuffer(data, size, stride, vk::BufferUsageFlagBits::eIndexBuffer, sharingInfo) {};
 	};
 
 	
@@ -99,21 +113,29 @@ namespace Hyperion::System::Memory {
 
 		//TODO Find better solution, friend function?
 		const vk::Image& getHandle() const;
+		virtual vk::AttachmentDescription getAttachmentDescription() const = 0;
+
+
+		static vk::ImageAspectFlags getImageAspectFlags(const vk::ImageUsageFlags& imageUsageFlags);
+		static vk::ImageViewType getViewType(const vk::ImageType& imageType);
 
 	private:
+
 		vk::DeviceMemory memory;
 		vk::DeviceSize dataSize;
 		//TODO Remove allocationsize
 		vk::DeviceSize allocationSize;
 		vk::Image handle;
+		vk::ImageView imageView;
 
 		ResourceStatus status;
 
 	protected:
-		void copyFrom(const VulkanDimResource& other, const vk::ImageLayout thisLayout, const vk::ImageLayout otherLayout, const std::vector<vk::ImageCopy>& imageCopies);
-		void copyFrom(const VulkanBuffer& other, const vk::ImageLayout thisLayout, const std::vector<vk::BufferImageCopy>& bufferImageCopies);
+		void copyFrom(const VulkanDimResource& other, const std::vector<vk::ImageCopy>& imageCopies);
+		void copyFrom(const VulkanBuffer& other, const std::vector<vk::BufferImageCopy>& bufferImageCopies);
 
-		void changeLayout(const Rendering::QueueTypeInfo& queueInfo, const vk::ImageLayout& oldLayout, const vk::ImageLayout& newLayout, const vk::ImageSubresourceRange& subresourceRange);
+		void changeLayout(const Rendering::QueueTypeInfo& queueInfo, const vk::ImageLayout& newLayout, const vk::ImageSubresourceRange& subresourceRange);
+
 
 		vk::ImageLayout currentLayout = vk::ImageLayout::ePreinitialized;
 

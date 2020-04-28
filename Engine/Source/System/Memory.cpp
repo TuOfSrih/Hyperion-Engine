@@ -179,6 +179,21 @@ namespace Hyperion::System::Memory {
 		});
 		status = ResourceStatus::VALID;
 
+		imageView = device.createImageView(vk::ImageViewCreateInfo{
+			{},
+			handle,
+			VulkanDimResource::getViewType(type),
+			format,
+			{},
+			vk::ImageSubresourceRange{
+				VulkanDimResource::getImageAspectFlags(imageUsageFlags),
+				0, 
+				mipLevels,
+				0,
+				arrayLayers
+			}
+		});
+
 		vk::MemoryRequirements memRequirements = device.getImageMemoryRequirements(handle);
 		if (memRequirements.size > 0) {
 			
@@ -209,11 +224,13 @@ namespace Hyperion::System::Memory {
 			memory = std::move(other.memory);
 			handle = std::move(other.handle);
 			status = std::move(other.status);
+			imageView = std::move(other.imageView);
 
 			other.dataSize = 0;
 			other.memory = vk::DeviceMemory();
 			other.handle = vk::Image();
 			other.status = ResourceStatus::INVALID;
+			other.imageView = vk::ImageView();
 		}
 
 		return *this;
@@ -222,8 +239,25 @@ namespace Hyperion::System::Memory {
 	VulkanDimResource::~VulkanDimResource()
 	{
 		const vk::Device& device = Rendering::RenderContext::active->getDevice();
+
+		device.destroyImageView(imageView);
 		if (status >= ResourceStatus::ALLOCATED) device.freeMemory(memory);
 		if (status >= ResourceStatus::VALID) device.destroyImage(handle);
+	}
+
+	vk::ImageAspectFlags VulkanDimResource::getImageAspectFlags(const vk::ImageUsageFlags& imageUsageFlags)
+	{
+		vk::ImageAspectFlags flags;
+		flags |= (imageUsageFlags & vk::ImageUsageFlagBits::eColorAttachment) ? vk::ImageAspectFlagBits::eColor : vk::ImageAspectFlagBits{};
+		flags |= (imageUsageFlags & vk::ImageUsageFlagBits::eDepthStencilAttachment) ?
+			vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil : vk::ImageAspectFlagBits{};
+
+		return flags;
+	}
+
+	vk::ImageViewType VulkanDimResource::getViewType(const vk::ImageType& imageType)
+	{
+		return static_cast<vk::ImageViewType>(imageType);
 	}
 
 	const vk::Image& VulkanDimResource::getHandle() const
@@ -231,17 +265,22 @@ namespace Hyperion::System::Memory {
 		return handle;
 	}
 
+	vk::AttachmentDescription VulkanDimResource::getAttachmentDescription()
+	{
+		return vk::AttachmentDescription();
+	}
 
-	void VulkanDimResource::copyFrom(const VulkanDimResource& other, const vk::ImageLayout thisLayout, const vk::ImageLayout otherLayout, const std::vector<vk::ImageCopy>& imageCopies)
+
+	void VulkanDimResource::copyFrom(const VulkanDimResource& other, const std::vector<vk::ImageCopy>& imageCopies)
 	{
 		const vk::Device& device = Rendering::RenderContext::active->getDevice();
 		ASSERT(status >= ResourceStatus::ALLOCATED);
 		vk::CommandBuffer buffer = Hyperion::Rendering::Vulkan::simpleExecuteTransfer([&](const vk::CommandBuffer& cmdBuffer) {
 			cmdBuffer.copyImage(
 				other.handle,
-				otherLayout,
+				other.currentLayout,
 				handle,
-				thisLayout,
+				currentLayout,
 				imageCopies
 			);
 		}
@@ -251,7 +290,7 @@ namespace Hyperion::System::Memory {
 		device.freeCommandBuffers(Rendering::RenderContext::active->getTransferPool(), 1, &buffer);
 	}
 
-	void VulkanDimResource::copyFrom(const VulkanBuffer& other, const vk::ImageLayout thisLayout, const std::vector<vk::BufferImageCopy>& bufferImageCopies)
+	void VulkanDimResource::copyFrom(const VulkanBuffer& other, const std::vector<vk::BufferImageCopy>& bufferImageCopies)
 	{
 		const vk::Device& device = Rendering::RenderContext::active->getDevice();
 		ASSERT(status >= ResourceStatus::ALLOCATED);
@@ -259,17 +298,16 @@ namespace Hyperion::System::Memory {
 			cmdBuffer.copyBufferToImage(
 				other.getHandle(),
 				handle,
-				thisLayout,
+				currentLayout,
 				bufferImageCopies
 			);
-		}
-		);
+		});
 		//Todo Implement proper handler with callback
 		Rendering::RenderContext::active->getTransferQueue().waitIdle();
 		device.freeCommandBuffers(Rendering::RenderContext::active->getTransferPool(), 1, &buffer);
 	}
 
-	void VulkanDimResource::changeLayout(const Rendering::QueueTypeInfo& queueInfo, const vk::ImageLayout& oldLayout, const vk::ImageLayout& newLayout, const vk::ImageSubresourceRange& subresourceRange)
+	void VulkanDimResource::changeLayout(const Rendering::QueueTypeInfo& queueInfo, const vk::ImageLayout& newLayout, const vk::ImageSubresourceRange& subresourceRange)
 	{
 		const vk::Device& device = Rendering::RenderContext::active->getDevice();
 		ASSERT(static_cast<uint32_t>(status) >= static_cast<uint32_t>(ResourceStatus::VALID));
@@ -298,7 +336,7 @@ namespace Hyperion::System::Memory {
 					vk::ImageMemoryBarrier{
 						srcFlags,
 						dstFlags,
-						oldLayout,
+						currentLayout,
 						newLayout,
 						VK_QUEUE_FAMILY_IGNORED,
 						VK_QUEUE_FAMILY_IGNORED,
@@ -308,6 +346,8 @@ namespace Hyperion::System::Memory {
 				}
 				);
 		});
+
+		currentLayout = newLayout;
 
 		//Todo Implement proper handler with callback
 		queueInfo.getQueue().waitIdle();
@@ -331,13 +371,10 @@ namespace Hyperion::System::Memory {
 			VulkanBuffer stagingBuffer(data, size, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eTransferSrc,
 				vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible, sharingInfo);
 			
-			vk::ImageAspectFlags flags; 
-			flags |= (imageUsageFlags & vk::ImageUsageFlagBits::eColorAttachment) ? vk::ImageAspectFlagBits::eColor : vk::ImageAspectFlagBits{};
-			flags |= (imageUsageFlags & vk::ImageUsageFlagBits::eDepthStencilAttachment) ?
-				vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil : vk::ImageAspectFlagBits{};
+			vk::ImageAspectFlags flags = VulkanDimResource::getImageAspectFlags(imageUsageFlags);
 
-			changeLayout(Rendering::QueueType::TRANSFER, vk::ImageLayout::ePreinitialized, vk::ImageLayout::eTransferDstOptimal, { flags, 0, mipLevels, 0, arrayLayers });
-			copyFrom(std::move(stagingBuffer), vk::ImageLayout::ePreinitialized, { { 0, 0, 0, {flags, 0, 0, arrayLayers}, {}, extent } });
+			changeLayout(Rendering::QueueType::TRANSFER, vk::ImageLayout::eTransferDstOptimal, { flags, 0, mipLevels, 0, arrayLayers });
+			copyFrom(stagingBuffer, { { 0, 0, 0, {flags, 0, 0, arrayLayers}, {}, extent } });
 
 		}
 	}

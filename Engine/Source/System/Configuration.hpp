@@ -26,5 +26,7 @@ namespace Hyperion {
 		const std::string engineName = "Hyperion Engine";
 		const Version applicationVersion;
 		const Version engineVersion = Version(1, 0, 0);
+
+		const std::string shaderDir = "";
 	};
 }

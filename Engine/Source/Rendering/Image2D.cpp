@@ -13,7 +13,7 @@ namespace Hyperion::Rendering {
 	RenderTarget& RenderTarget::operator=(const RenderTarget& other) {
 
 		ASSERT(extent == other.extent);
-		copyFrom(other, currentLayout, other.currentLayout,
+		copyFrom(other,
 			{
 				{
 					{vk::ImageAspectFlagBits::eColor, 0, 0, 1},
@@ -36,7 +36,7 @@ namespace Hyperion::Rendering {
 	DepthBuffer& DepthBuffer::operator=(const DepthBuffer& other) {
 		
 		ASSERT(extent == other.extent);
-		copyFrom(other, currentLayout, other.currentLayout,
+		copyFrom(other,
 			{
 				{
 					{vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil, 0, 0, 1},
@@ -49,5 +49,33 @@ namespace Hyperion::Rendering {
 		);
 
 		return *this;
+	}
+	vk::AttachmentDescription RenderTarget::getAttachmentDescription() const 
+	{
+		return {
+				{},
+				Image2D::defaultColorFormat,
+				vk::SampleCountFlagBits::e1,
+				vk::AttachmentLoadOp::eLoad,
+				vk::AttachmentStoreOp::eDontCare,
+				vk::AttachmentLoadOp::eLoad,
+				vk::AttachmentStoreOp::eDontCare,
+				RenderTarget::defaultRenderTargetLayout,
+				RenderTarget::defaultRenderTargetLayout
+		};
+	}
+	vk::AttachmentDescription DepthBuffer::getAttachmentDescription() const
+	{
+		return {
+				{},
+				Image2D::defaultDepthStencilFormat,
+				vk::SampleCountFlagBits::e1,
+				vk::AttachmentLoadOp::eLoad,
+				vk::AttachmentStoreOp::eStore,
+				vk::AttachmentLoadOp::eLoad,
+				vk::AttachmentStoreOp::eStore,
+				DepthBuffer::defaultDepthStencilLayout,
+				DepthBuffer::defaultDepthStencilLayout
+		};
 	}
 }

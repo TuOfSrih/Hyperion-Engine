@@ -197,6 +197,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\Source\Cpp\AdvancedOperators.hpp" />
     <ClInclude Include="..\..\..\Source\Math\BitOperations.hpp" />
+    <ClInclude Include="..\..\..\Source\Rendering\FrameBuffer.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Image2D.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Mesh.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Pipeline.hpp" />
@@ -205,6 +206,7 @@
     <ClInclude Include="..\..\..\Source\Rendering\RenderContext.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Shader.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\Swapchain.hpp" />
+    <ClInclude Include="..\..\..\Source\Rendering\Vertex.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\VideoSettings.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\VulkanAlias.hpp" />
     <ClInclude Include="..\..\..\Source\Rendering\VulkanUtils.hpp" />
@@ -221,6 +223,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Source\Cpp\AdvancedOperators.cpp" />
     <ClCompile Include="..\..\..\Source\Math\BitOperations.cpp" />
+    <ClCompile Include="..\..\..\Source\Rendering\FrameBuffer.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Image2D.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Mesh.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Pipeline.cpp" />
@@ -229,6 +232,7 @@
     <ClCompile Include="..\..\..\Source\Rendering\RenderContext.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Shader.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\Swapchain.cpp" />
+    <ClCompile Include="..\..\..\Source\Rendering\Vertex.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\VideoSettings.cpp" />
     <ClCompile Include="..\..\..\Source\Rendering\VulkanUtils.cpp" />
     <ClCompile Include="..\..\..\Source\System\Application.cpp" />

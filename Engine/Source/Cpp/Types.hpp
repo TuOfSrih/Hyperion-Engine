@@ -18,6 +18,7 @@ namespace Hyperion::Cpp {
 		Flags& operator^=(const T& other) const { mask ^= other.mask; return *this; }
 		Flags& operator~() const { mask = ~mask; return *this; }
 		explicit operator uint32_t() const { return mask; };
+		operator bool() const { return mask; }
 
 	private:
 		uint32_t mask;
