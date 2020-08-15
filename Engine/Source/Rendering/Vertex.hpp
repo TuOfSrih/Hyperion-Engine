@@ -8,9 +8,10 @@
 
 namespace Hyperion::Rendering {
 
+
 	class VertexType {//TODO Find better solution with less memory consumption
 	public:
-
+		VertexType() = default;
 		virtual std::vector<vk::VertexInputAttributeDescription> getInputAttributeDescriptions() const = 0;
 		virtual vk::VertexInputBindingDescription getInputBindingDescription() const = 0;
 		virtual vk::DescriptorSetLayout getDescriptorLayout() const = 0;
@@ -21,7 +22,13 @@ namespace Hyperion::Rendering {
 	};
 
 	class RawVertex : public VertexType {
+	public:
+		virtual std::vector<vk::VertexInputAttributeDescription> getInputAttributeDescriptions() const override;
+		virtual vk::VertexInputBindingDescription getInputBindingDescription() const override;
+		virtual vk::DescriptorSetLayout getDescriptorLayout() const override;
 
+	private:
+		glm::vec3 pos;
 	};
 
 	class OrientedVertex : public VertexType {
@@ -38,9 +45,10 @@ namespace Hyperion::Rendering {
 
 	class CombinedVertex : public VertexType {
 	public:
-
-		virtual std::vector<vk::VertexInputAttributeDescription> getInputAttributeDescriptions() const;
-		virtual vk::VertexInputBindingDescription getInputBindingDescription() const;
+		CombinedVertex() = default;
+		virtual std::vector<vk::VertexInputAttributeDescription> getInputAttributeDescriptions() const override;
+		virtual vk::VertexInputBindingDescription getInputBindingDescription() const override;
+		virtual vk::DescriptorSetLayout getDescriptorLayout() const override;
 
 	private:
 		glm::vec3 pos;

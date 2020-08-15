@@ -120,8 +120,8 @@ namespace Hyperion::Rendering {
 
 		glfwDestroyWindow(window);
 	}
-	uint32_t Swapchain::getBufferImageIndex() const
+	const vk::SwapchainKHR& Swapchain::getRaw() const
 	{
-		return activeBufferImageIndex;
+		return swapchain;
 	}
 }

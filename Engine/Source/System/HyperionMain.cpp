@@ -10,13 +10,13 @@
 #include "vulkan/vulkan.hpp"
 #include "glm/glm.hpp"
 
-
+using namespace Hyperion::Rendering;
 
 int main()
 {
 	Hyperion::Application app;
-	Hyperion::Rendering::MeshInstance object({}, Hyperion::Rendering::PrimitiveType::Cube);
-	Hyperion::Rendering::RenderTarget rt;
+	VisualEntity object(Transform(glm::vec3{ 0, 0, 0 }, glm::vec3{ 0, 0, 0 }, glm::vec3{1, 1, 1}), nullptr, &RenderContext::active->getPipelineHandler().getDefaultForward());
+	//Hyperion::Rendering::RenderTarget rt;
 
 
 	app.run();

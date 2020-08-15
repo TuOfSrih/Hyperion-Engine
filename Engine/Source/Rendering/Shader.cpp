@@ -37,6 +37,8 @@ namespace Hyperion::Rendering {
 		this->~Shader();
 
 		module = std::move(other.module);
+
+		return *this;
 	}
 	const vk::ShaderModule& Shader::getModule() const
 	{
@@ -49,14 +51,20 @@ namespace Hyperion::Rendering {
 		bulkLoadShaders(shaderPaths);
 	}
 
+	ShaderRegistry::~ShaderRegistry()
+	{
+
+		for (auto& shader : loadedMap) delete shader.second;
+	}
+
 	const Shader& ShaderRegistry::loadShader(const std::filesystem::path& path)
 	{
-		ASSERT(inserted != std::string());
-		auto [iterator, inserted] = loadedMap.emplace(std::make_pair(path.string(), Shader(shaderDir / path)));
+		ASSERT(path != std::string());
+		auto [iterator, inserted] = loadedMap.emplace(std::make_pair(path.string(), new Shader(shaderDir / path)));
 
 		ASSERT(inserted);
 
-		return iterator->second;
+		return *iterator->second;
 	}
 
 	void ShaderRegistry::bulkLoadShaders(const std::vector<std::filesystem::path>& shaderPaths)
@@ -77,8 +85,6 @@ namespace Hyperion::Rendering {
 
 		ASSERT(mapEntry != loadedMap.end());
 
-		auto [name, shader] = mapEntry;
-
-		return shader;
+		return *mapEntry->second;
 	}
 }

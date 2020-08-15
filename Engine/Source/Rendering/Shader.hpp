@@ -15,7 +15,8 @@ namespace Hyperion::Rendering {
 	public:
 		Shader() = default;
 		explicit Shader(const std::filesystem::path& path);
-		declMoveOnly(Shader);
+		noCopy(Shader);
+		declMove(Shader);
 		~Shader();
 
 		const vk::ShaderModule& getModule() const;
@@ -28,6 +29,9 @@ namespace Hyperion::Rendering {
 	public:
 		ShaderRegistry() = default;
 		ShaderRegistry(const Configuration& config, const std::vector<std::filesystem::path>& shaderNames = {});
+		noCopy(ShaderRegistry);
+		defaultMove(ShaderRegistry);
+		~ShaderRegistry();
 
 		const Shader& loadShader(const std::filesystem::path& path);
 		void bulkLoadShaders(const std::vector<std::filesystem::path>& shaderNames);
@@ -36,7 +40,7 @@ namespace Hyperion::Rendering {
 		const Shader& getShader(const std::filesystem::path& path) const;
 
 	private:
-		std::unordered_map<std::string, Shader> loadedMap;
+		std::unordered_map<std::string, const Shader*> loadedMap;
 		std::string shaderDir;
 	};
 }

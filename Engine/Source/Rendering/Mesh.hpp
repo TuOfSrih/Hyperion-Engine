@@ -1,27 +1,14 @@
 #pragma once
 
 #include "System/Memory.hpp"
-#include "RenderContext.hpp"
 
-#include "glm/glm.hpp"
-#include "glm/gtc/quaternion.hpp"
 #include "vulkan/vulkan.hpp"
+#include "glm/glm.hpp"
 
 #include <vector>
 
 
 namespace Hyperion::Rendering {
-
-	class Transform {
-	public:
-		Transform() = default;
-		Transform(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale);
-
-	private:
-		glm::vec3 position;
-		glm::quat orientation;
-		glm::vec3 scale;
-	};
 
 	class VertexOnlyMesh {
 	public:
@@ -30,6 +17,9 @@ namespace Hyperion::Rendering {
 		defaultTouch(VertexOnlyMesh);
 
 		virtual ~VertexOnlyMesh() = default;
+
+		virtual void bind(const vk::CommandBuffer& commandBuffer) const;
+		virtual void draw(const vk::CommandBuffer& commandBuffer) const;
 
 	protected:
 		System::Memory::VertexBuffer vertexBuffer;
@@ -41,7 +31,8 @@ namespace Hyperion::Rendering {
 			: indexBuffer(indices.data(), indices.size() * sizeof(uint32_t)), 
 			VertexOnlyMesh(vertices) {};
 
-
+		virtual void bind(const vk::CommandBuffer& commandBuffer) const override;
+		virtual void draw(const vk::CommandBuffer& commandBuffer) const override;
 
 	private:
 		System::Memory::IndexBuffer indexBuffer;
@@ -58,7 +49,7 @@ namespace Hyperion::Rendering {
 
 	const Mesh* GetPrimitive(PrimitiveType type);
 
-	class MeshInstance {
+	/*class MeshInstance {
 	public:
 		MeshInstance(Transform transform, const Mesh* mesh) : transform(transform), mesh(mesh){};
 		MeshInstance(Transform transform, PrimitiveType primitive) : MeshInstance(transform, GetPrimitive(primitive)) {};
@@ -66,5 +57,5 @@ namespace Hyperion::Rendering {
 	private:
 		Transform transform;
 		const Mesh* mesh;
-	};
+	};*/
 }

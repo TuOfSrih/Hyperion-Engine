@@ -1,7 +1,5 @@
 #pragma once
 
-#include "RenderContext.hpp"
-
 #include "System/Memory.hpp"
 
 
@@ -17,9 +15,8 @@ namespace Hyperion::Rendering {
 			const vk::Extent2D& extent,
 			uint32_t mipLevels,
 			const vk::SampleCountFlagBits sampleFlags,
-			const vk::ImageUsageFlags imageUsageFlags,
-			const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{})
-			: GPUDimResource(data, size, {}, vk::ImageType::e2D, format, vk::Extent3D(extent, 1), mipLevels, 1, sampleFlags, imageUsageFlags, sharingInfo) {};
+			const vk::ImageUsageFlags imageUsageFlags)
+			: GPUDimResource(data, size, {}, vk::ImageType::e2D, format, vk::Extent3D(extent, 1), mipLevels, 1, sampleFlags, imageUsageFlags) {};
 
 		noCopy(Image2D);
 		defaultMove(Image2D);
@@ -37,11 +34,10 @@ namespace Hyperion::Rendering {
 	class RenderTarget : public Image2D {
 	public:
 		RenderTarget(
-			const vk::Extent2D& extent = RenderContext::active->getVideoSettings().resolution,
+			const vk::Extent2D& extent,
 			const void* data = nullptr,
-			const vk::DeviceSize size = 0,
-			const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{})
-			: Image2D(data, size, Image2D::defaultColorFormat, extent, 1, vk::SampleCountFlagBits::e1, vk::ImageUsageFlagBits::eColorAttachment, sharingInfo) {};
+			const vk::DeviceSize size = 0)
+			: Image2D(data, size, Image2D::defaultColorFormat, extent, 1, vk::SampleCountFlagBits::e1, vk::ImageUsageFlagBits::eColorAttachment) {};
 
 		declCopy(RenderTarget);
 		defaultMove(RenderTarget);
@@ -58,11 +54,10 @@ namespace Hyperion::Rendering {
 	class DepthBuffer : public Image2D {
 	public:
 		DepthBuffer(
-			const vk::Extent2D& extent = RenderContext::active->getVideoSettings().resolution,
+			const vk::Extent2D& extent,
 			const void* data = nullptr,
-			const vk::DeviceSize size = 0,
-			const Rendering::Vulkan::SharingInfo& sharingInfo = Rendering::Vulkan::SharingInfo{})
-			: Image2D(data, size, Image2D::defaultDepthStencilFormat, extent, 1, vk::SampleCountFlagBits::e1, vk::ImageUsageFlagBits::eDepthStencilAttachment, sharingInfo) {};
+			const vk::DeviceSize size = 0)
+			: Image2D(data, size, Image2D::defaultDepthStencilFormat, extent, 1, vk::SampleCountFlagBits::e1, vk::ImageUsageFlagBits::eDepthStencilAttachment) {};
 
 		declCopy(DepthBuffer);
 		defaultMove(DepthBuffer);
@@ -72,6 +67,8 @@ namespace Hyperion::Rendering {
 		virtual vk::AttachmentDescription getAttachmentDescription() const override;
 
 		static const vk::ImageLayout defaultDepthStencilLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+		static const float minDepth;
+		static const float maxDepth;
 	};
 
 	class Texture {
@@ -83,6 +80,7 @@ namespace Hyperion::Rendering {
 
 		virtual vk::AttachmentDescription getAttachmentDescription() const = 0;
 		virtual vk::ImageLayout getReadLayout() const = 0;
+		virtual vk::ImageView getImageView() const = 0;
 		virtual vk::DescriptorSetLayout getDescriptorSetLayout() const = 0;
 	};
 

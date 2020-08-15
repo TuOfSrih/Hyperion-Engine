@@ -28,7 +28,7 @@ namespace Hyperion::Rendering {
 	{
 		switch (type) {
 		case QueueType::GRAPHICS:
-			return RenderContext::active->getCurrentGraphicsPool();
+			return RenderContext::active->getActiveGraphicsPool();
 			break;
 		case QueueType::COMPUTE:
 			return RenderContext::active->getComputePool();

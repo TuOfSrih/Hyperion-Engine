@@ -20,13 +20,12 @@ namespace Hyperion::Rendering {
 		declMove(Swapchain);
 		~Swapchain();
 
-		uint32_t getBufferImageIndex() const;
+		const vk::SwapchainKHR& getRaw() const;
 
 	private:
 		GLFWwindow* window;
 		vk::SurfaceKHR surface;
 		vk::SwapchainKHR swapchain{};
 		std::vector<vk::ImageView> swapchainImageViews{};
-		uint32_t activeBufferImageIndex;
 	};
 }

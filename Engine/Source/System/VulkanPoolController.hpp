@@ -9,13 +9,13 @@
 namespace Hyperion::System::Memory {
 
 
-	class CommandPoolController {
+	class VulkanPoolController {
 	public:
-		CommandPoolController() = default;
-		CommandPoolController(const int threadCount, const Rendering::QueueFamilyIndices& queueFamilyIndices);
-		~CommandPoolController();
-		noCopy(CommandPoolController);
-		declMove(CommandPoolController);
+		VulkanPoolController() = default;
+		VulkanPoolController(const int threadCount, const Rendering::QueueFamilyIndices& queueFamilyIndices);
+		~VulkanPoolController();
+		noCopy(VulkanPoolController);
+		declMove(VulkanPoolController);
 		
 
 		const vk::CommandPool& getGraphicsPool(const int threadID, const int bufferImageIndex) const;
@@ -26,5 +26,7 @@ namespace Hyperion::System::Memory {
 		std::vector<vk::CommandPool> graphicsPools;
 		vk::CommandPool transferPool;
 		vk::CommandPool computePool;
+
+		vk::DescriptorPool descriptorPool;//Proper handling of descriptorPools + sets
 	};
 }

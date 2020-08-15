@@ -1,8 +1,10 @@
 #pragma once
 
+#include "VideoSettings.hpp"
 #include "Image2D.hpp"
 
 #include "System/Configuration.hpp"
+#include "Cpp/AdvancedOperators.hpp"
 
 #include "vulkan/vulkan.hpp"
 
@@ -16,8 +18,8 @@ namespace Hyperion::Rendering {
 	public:
 		FrameBuffer(const VideoSettings& videoSettings);
 
-		noCopy();
-		declMove();
+		noCopy(FrameBuffer);
+		declMove(FrameBuffer);
 
 		~FrameBuffer();
 

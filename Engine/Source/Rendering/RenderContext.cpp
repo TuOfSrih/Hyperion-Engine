@@ -73,16 +73,38 @@ namespace Hyperion::Rendering {
 		transferQueue = device.getQueue(queueIndices.transferIndex, queueIndices.transferIndex == queueIndices.graphicsIndex);
 		computeQueue = device.getQueue(queueIndices.computeIndex, (queueIndices.computeIndex == queueIndices.graphicsIndex) + (queueIndices.computeIndex == queueIndices.transferIndex));
 
+		//Changes width to 1061
 		swapchain = Swapchain(config, videoSettings, queueIndices);
 		
-		cmdPoolController = System::Memory::CommandPoolController(std::thread::hardware_concurrency() + 1, queueIndices);
+		cmdPoolController = System::Memory::VulkanPoolController(std::thread::hardware_concurrency() + 1, queueIndices);
+
+		drawController = DrawController();
+		drawController.registerDefaultRenderTarget("defaultRT", new RenderTarget(videoSettings.resolution));
+		drawController.registerDefaultDepthBuffer("defaultDB", new DepthBuffer(videoSettings.resolution));
+
 		pipelineHandler = PipelineHandler(config);
+
+		bufferingFences.reserve(videoSettings.bufferImageCount);
+		resourcesAvailableSemaphores.reserve(videoSettings.bufferImageCount);
+		frameFinishedSemaphores.reserve(videoSettings.bufferImageCount);
+		for (int i = 0; i < videoSettings.bufferImageCount; ++i) {
+			bufferingFences.emplace_back(
+				device.createFence(
+					{
+						(i == 0 ? vk::FenceCreateFlagBits::eSignaled : vk::FenceCreateFlags())
+					}
+				)
+			);
+
+			resourcesAvailableSemaphores.emplace_back(device.createSemaphore({}));
+			frameFinishedSemaphores.emplace_back(device.createSemaphore({}));
+		}
 	}
 	
 	RenderContext::~RenderContext()
 	{
 		pipelineHandler.~PipelineHandler();
-		cmdPoolController.~CommandPoolController();
+		cmdPoolController.~VulkanPoolController();
 		swapchain.~Swapchain();
 		device.destroy();
 #ifdef _DEBUG
@@ -333,9 +355,9 @@ namespace Hyperion::Rendering {
 		
 		return { graphics, transfer, compute };
 	}
-	const vk::CommandPool& RenderContext::getCurrentGraphicsPool() const
+	const vk::CommandPool& RenderContext::getActiveGraphicsPool() const
 	{
-		return getGraphicsPool(System::Thread::threadNum, swapchain.getBufferImageIndex());
+		return getGraphicsPool(System::Thread::threadNum, getActiveBufferIndex());
 	}
 	const vk::CommandPool& RenderContext::getGraphicsPool(const int threadID, const int bufferImageIndex) const
 	{
@@ -348,6 +370,14 @@ namespace Hyperion::Rendering {
 	const vk::CommandPool& RenderContext::getComputePool() const
 	{
 		return cmdPoolController.getComputePool();
+	}
+	uint32_t RenderContext::getActiveBufferIndex() const
+	{
+		return activeBufferIndex;
+	}
+	const PipelineHandler& RenderContext::getPipelineHandler() const
+	{
+		return pipelineHandler;
 	}
 	const vk::Device & RenderContext::getDevice() const 
 	{
@@ -381,6 +411,46 @@ namespace Hyperion::Rendering {
 	{
 		ASSERT(active == nullptr);
 		active = newContext;
+	}
+	void RenderContext::render()
+	{
+		auto cmdBuffers = drawController.drawAll();
+
+		device.waitForFences(bufferingFences.at(activeBufferIndex), VK_FALSE, std::numeric_limits<uint64_t>::max());
+		device.resetFences(bufferingFences.at(activeBufferIndex));
+
+		uint32_t nextIndex = device.acquireNextImageKHR(swapchain.getRaw(), std::numeric_limits<uint64_t>::max(), resourcesAvailableSemaphores.at(activeBufferIndex), {}).value;
+		nextIndex = (activeBufferIndex + 1) % videoSettings.bufferImageCount;
+
+		vk::PipelineStageFlags flags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+		graphicsQueue.submit(
+			{ 
+				{
+				1,
+				&resourcesAvailableSemaphores.at(activeBufferIndex),
+				&flags, //TODO Possibly earlier, check again
+				static_cast<uint32_t>(cmdBuffers.size()),
+				cmdBuffers.data(),
+				1,
+				&frameFinishedSemaphores.at(activeBufferIndex)
+				} 
+			},
+			bufferingFences.at(nextIndex)
+
+		);
+
+		graphicsQueue.presentKHR(
+			vk::PresentInfoKHR{
+				1,
+				&frameFinishedSemaphores.at(activeBufferIndex),
+				1, 
+				&swapchain.getRaw(),
+				&activeBufferIndex,
+				nullptr
+			}
+		);
+
+		activeBufferIndex = nextIndex;
 	}
 }
 

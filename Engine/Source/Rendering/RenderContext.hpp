@@ -3,9 +3,11 @@
 #include "Queue.hpp"
 #include "Swapchain.hpp"
 #include "VideoSettings.hpp"
+#include "Pipeline.hpp"
+#include "DrawController.hpp"
 
-#include "System/CommandPoolController.hpp"
-#include "Rendering/Pipeline.hpp"
+
+#include "System/VulkanPoolController.hpp"
 #include "System/Configuration.hpp"
 #include "System/Debug.hpp"
 #include "System/Memory.hpp"
@@ -18,7 +20,7 @@
 
 namespace Hyperion::Rendering {
 
-	vk::FrontFace RenderOrder = vk::FrontFace::eClockwise;//Collect somewhere? TODO
+	const vk::FrontFace RenderOrder = vk::FrontFace::eClockwise;//Collect somewhere? TODO
 
 	//TODO Subdivide into Context + VulkanContext
 	class RenderContext {
@@ -37,14 +39,19 @@ namespace Hyperion::Rendering {
 
 		const QueueFamilyIndices getQueueFamilyIndices() const;
 
-		const vk::CommandPool& getCurrentGraphicsPool() const;
+		const vk::CommandPool& getActiveGraphicsPool() const;
 		const vk::CommandPool& getGraphicsPool(const int threadID, const int bufferImageIndex) const;
 		const vk::CommandPool& getTransferPool() const;
 		const vk::CommandPool& getComputePool() const;
 
+		uint32_t getActiveBufferIndex() const;
+
+		const PipelineHandler& getPipelineHandler() const;
 		
 		static const RenderContext* active;
 		void setContext(RenderContext* newContext);
+
+		void render();
 		
 
 	private:
@@ -85,9 +92,15 @@ namespace Hyperion::Rendering {
 		vk::Queue transferQueue;
 
 		Hyperion::Rendering::Swapchain swapchain;
-		System::Memory::CommandPoolController cmdPoolController;
+		uint32_t activeBufferIndex;
+		System::Memory::VulkanPoolController cmdPoolController;
 
+		DrawController drawController;
 		PipelineHandler pipelineHandler;
+
+		std::vector<vk::Fence> bufferingFences;
+		std::vector<vk::Semaphore> resourcesAvailableSemaphores;
+		std::vector<vk::Semaphore> frameFinishedSemaphores;
 		
 	};
 

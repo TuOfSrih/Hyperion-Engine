@@ -1,12 +1,13 @@
 
-#include "CommandPoolController.hpp"
+#include "VulkanPoolController.hpp"
 
 #include "Rendering/RenderContext.hpp"
 #include "Rendering/Queue.hpp"
 
+
 namespace Hyperion::System::Memory {
 
-	CommandPoolController::CommandPoolController(const int threadCount, const Rendering::QueueFamilyIndices& queueFamilyIndices)
+	VulkanPoolController::VulkanPoolController(const int threadCount, const Rendering::QueueFamilyIndices& queueFamilyIndices)
 	{
 		const vk::Device& device = Rendering::RenderContext::active->getDevice();
 		int totalPools = threadCount * Rendering::RenderContext::active->getVideoSettings().bufferImageCount;
@@ -36,22 +37,36 @@ namespace Hyperion::System::Memory {
 				queueFamilyIndices.computeIndex
 			}
 		);
+		uint32_t bufferImageCount = Rendering::RenderContext::active->getVideoSettings().bufferImageCount;
+		std::vector<vk::DescriptorPoolSize> poolSizes = {
+			{vk::DescriptorType::eUniformBuffer, bufferImageCount}
+		};
+
+		descriptorPool = device.createDescriptorPool({
+			{},
+			bufferImageCount,
+			static_cast<uint32_t>(poolSizes.size()),
+			poolSizes.data()
+		});
 
 	}
-	CommandPoolController::~CommandPoolController()
+	VulkanPoolController::~VulkanPoolController()
 	{
 		const vk::Device& device = Rendering::RenderContext::active->getDevice();
+
+		device.destroyDescriptorPool(descriptorPool);
+
 		device.destroyCommandPool(computePool);
 		device.destroyCommandPool(transferPool);
 		for (auto& pool : graphicsPools) device.destroyCommandPool(pool);
 	}
-	CommandPoolController::CommandPoolController(CommandPoolController&& other)
+	VulkanPoolController::VulkanPoolController(VulkanPoolController&& other)
 	{
 		*this = std::move(other);
 	}
-	CommandPoolController& CommandPoolController::operator=(CommandPoolController&& other)
+	VulkanPoolController& VulkanPoolController::operator=(VulkanPoolController&& other)
 	{
-		this->~CommandPoolController();
+		this->~VulkanPoolController();
 
 		if (this != &other) {
 
@@ -66,16 +81,16 @@ namespace Hyperion::System::Memory {
 
 		return *this;
 	}
-	const vk::CommandPool& CommandPoolController::getGraphicsPool(const int threadID, const int bufferImageIndex) const
+	const vk::CommandPool& VulkanPoolController::getGraphicsPool(const int threadID, const int bufferImageIndex) const
 	{
 		return graphicsPools.at((threadID)*Rendering::RenderContext::active->getVideoSettings().bufferImageCount + bufferImageIndex);
 	}
 
-	const vk::CommandPool& CommandPoolController::getTransferPool() const
+	const vk::CommandPool& VulkanPoolController::getTransferPool() const
 	{
 		return transferPool;
 	}
-	const vk::CommandPool& CommandPoolController::getComputePool() const
+	const vk::CommandPool& VulkanPoolController::getComputePool() const
 	{
 		return computePool;
 	}

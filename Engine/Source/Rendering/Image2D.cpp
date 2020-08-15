@@ -1,6 +1,8 @@
 
 #include "Image2D.hpp"
 
+#include "System/Debug.hpp"
+
 
 namespace Hyperion::Rendering {
 
@@ -50,6 +52,10 @@ namespace Hyperion::Rendering {
 
 		return *this;
 	}
+
+	const float DepthBuffer::minDepth = .0f;
+	const float DepthBuffer::maxDepth = 1.f;
+
 	vk::AttachmentDescription RenderTarget::getAttachmentDescription() const 
 	{
 		return {

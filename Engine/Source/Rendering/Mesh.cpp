@@ -1,11 +1,10 @@
 
 #include "Mesh.hpp"
 
-namespace Hyperion::Rendering {
+#include "Transform.hpp"
 
-	Transform::Transform(const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale) : position(position), orientation(orientation), scale(scale)
-	{
-	}
+
+namespace Hyperion::Rendering {
 
 
 	const Mesh* GetPrimitive(PrimitiveType type)
@@ -115,6 +114,25 @@ namespace Hyperion::Rendering {
 			break;
 		}
 		return nullptr;
+	}
+	void VertexOnlyMesh::bind(const vk::CommandBuffer& commandBuffer) const
+	{
+		commandBuffer.bindVertexBuffers(0, { vertexBuffer.getHandle() }, { {0} });
+	}
+
+	void VertexOnlyMesh::draw(const vk::CommandBuffer& commandBuffer) const
+	{
+		commandBuffer.draw(3, 1, 0, 0);//TODO Get from buffer
+	}
+
+	void Mesh::bind(const vk::CommandBuffer& commandBuffer) const
+	{
+		VertexOnlyMesh::bind(commandBuffer);
+		commandBuffer.bindIndexBuffer(indexBuffer.getHandle(), 0, System::Memory::IndexBuffer::indexType);
+	}
+	void Mesh::draw(const vk::CommandBuffer& commandBuffer) const
+	{
+		commandBuffer.drawIndexed(3, 1, 0, 0, 0);//TODO Get from buffer
 	}
 }
 
