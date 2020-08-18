@@ -2,10 +2,14 @@
 #include "Pipeline.hpp"
 
 #include "RenderContext.hpp"
+#include "DrawController.hpp"
 
 #include <array>
 
 namespace Hyperion::Rendering {
+
+	const std::string PipelineInfo::defaultForwardVertexShaderName = "defaultForward.vert.spv";
+	const std::string PipelineInfo::defaultForwardFragmentShaderName = "defaultForward.frag.spv";
 	//TODO Should not exist
 	Pipeline::Pipeline()
 	{
@@ -14,6 +18,7 @@ namespace Hyperion::Rendering {
 	{
 		const vk::Device device = RenderContext::active->getDevice();
 		renderpass = createRenderPass(pipelineInfo);
+		frameBuffers = createFrameBuffers(pipelineInfo, true);
 		const std::vector<vk::PipelineShaderStageCreateInfo> shaderStages = getShaderInfo(pipelineInfo);
 		auto attributeDescriptions = pipelineInfo.vertexType->getInputAttributeDescriptions();
 		auto bindingDescription = pipelineInfo.vertexType->getInputBindingDescription();
@@ -32,9 +37,13 @@ namespace Hyperion::Rendering {
 		const vk::PipelineRasterizationStateCreateInfo rasterizationInfo = createRasterizationInfo(pipelineInfo);
 		const vk::PipelineMultisampleStateCreateInfo multisampleInfo = createMultiSampleInfo(pipelineInfo);
 		const vk::PipelineDepthStencilStateCreateInfo depthStencilInfo = createDepthStencilInfo(pipelineInfo);
-		const vk::PipelineColorBlendStateCreateInfo blendInfo = createBlendInfo(pipelineInfo);
-		const vk::PipelineDynamicStateCreateInfo dynamicStatesInfo = createDynamicStateInfo();
-		const auto[pipeLayout, descriptorLayouts] = createLayouts(pipelineInfo);
+		//Fix up pointers between objects
+		auto[ blendInfo, blendAttachmentState] = createBlendInfo(pipelineInfo);
+		blendInfo.pAttachments = &blendAttachmentState;
+		auto[ dynamicStatesInfo, dynamicStates] = createDynamicStateInfo();
+		dynamicStatesInfo.pDynamicStates = dynamicStates.data();
+		auto[ pipeLayout, descriptorLayouts] = createLayouts(pipelineInfo);
+
 		pipelineLayout = pipeLayout;
 		this->descriptorSetLayouts = descriptorLayouts;//TODO Move
 
@@ -105,7 +114,7 @@ namespace Hyperion::Rendering {
 	//	
 	//}
 
-	const vk::PipelineInputAssemblyStateCreateInfo Pipeline::createInputAssemblyInfo(const PipelineInfo& pipelineInfo) {
+	vk::PipelineInputAssemblyStateCreateInfo Pipeline::createInputAssemblyInfo(const PipelineInfo& pipelineInfo) {
 
 		return vk::PipelineInputAssemblyStateCreateInfo{
 				{},
@@ -114,7 +123,7 @@ namespace Hyperion::Rendering {
 		};
 	}
 	
-	const vk::PipelineTessellationStateCreateInfo Pipeline::createTesselationInfo (const PipelineInfo& pipelineInfo) {
+	vk::PipelineTessellationStateCreateInfo Pipeline::createTesselationInfo (const PipelineInfo& pipelineInfo) {
 
 		return vk::PipelineTessellationStateCreateInfo {
 			{},
@@ -122,7 +131,7 @@ namespace Hyperion::Rendering {
 		};
 	}
 
-	const vk::PipelineViewportStateCreateInfo Pipeline::createViewportInfo() {
+	vk::PipelineViewportStateCreateInfo Pipeline::createViewportInfo() {
 
 		const VideoSettings& videoSettings = RenderContext::active->getVideoSettings();
 
@@ -146,7 +155,7 @@ namespace Hyperion::Rendering {
 		};
 	}
 
-	const vk::PipelineRasterizationStateCreateInfo Pipeline::createRasterizationInfo(const PipelineInfo& pipelineInfo) {
+	vk::PipelineRasterizationStateCreateInfo Pipeline::createRasterizationInfo(const PipelineInfo& pipelineInfo) {
 
 		/*bool isLine = pipelineInfo.topology == vk::PrimitiveTopology::eLineList ||
 			pipelineInfo.topology == vk::PrimitiveTopology::eLineListWithAdjacency ||
@@ -168,10 +177,14 @@ namespace Hyperion::Rendering {
 			pipelineInfo.cullingFlags,
 			RenderOrder,
 			VK_FALSE,
+			0,
+			0,
+			0,
+			1
 		};
 	}
 
-	const vk::PipelineMultisampleStateCreateInfo Pipeline::createMultiSampleInfo(const PipelineInfo& pipelineInfo) {
+	vk::PipelineMultisampleStateCreateInfo Pipeline::createMultiSampleInfo(const PipelineInfo& pipelineInfo) {
 
 		return vk::PipelineMultisampleStateCreateInfo{
 			{},
@@ -179,7 +192,7 @@ namespace Hyperion::Rendering {
 		};
 	}
 
-	const vk::PipelineDepthStencilStateCreateInfo Pipeline::createDepthStencilInfo(const PipelineInfo& pipelineInfo) {
+	vk::PipelineDepthStencilStateCreateInfo Pipeline::createDepthStencilInfo(const PipelineInfo& pipelineInfo) {
 
 		return vk::PipelineDepthStencilStateCreateInfo{ 
 			{},
@@ -195,14 +208,14 @@ namespace Hyperion::Rendering {
 		};
 	}
 
-	const vk::PipelineColorBlendStateCreateInfo Pipeline::createBlendInfo(const PipelineInfo& pipelineInfo) {
+	std::pair<vk::PipelineColorBlendStateCreateInfo, vk::PipelineColorBlendAttachmentState> Pipeline::createBlendInfo(const PipelineInfo& pipelineInfo) {
 
-
+		std::pair<vk::PipelineColorBlendStateCreateInfo, vk::PipelineColorBlendAttachmentState> result;
 		if (pipelineInfo.blendMode == BlendMode::alphaBlend) {
-			const vk::PipelineColorBlendAttachmentState blendAttachmentState{
+			result.second = {
 				VK_TRUE,
-				vk::BlendFactor::eSrc1Alpha,
-				vk::BlendFactor::eOneMinusSrc1Alpha,
+				vk::BlendFactor::eSrcAlpha,
+				vk::BlendFactor::eOneMinusSrcAlpha,
 				vk::BlendOp::eAdd,
 				vk::BlendFactor::eOne,
 				vk::BlendFactor::eZero,
@@ -210,36 +223,41 @@ namespace Hyperion::Rendering {
 				vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA
 			};
 
-			return vk::PipelineColorBlendStateCreateInfo{
+			result.first = vk::PipelineColorBlendStateCreateInfo{
 				{},
 				VK_FALSE,
 				vk::LogicOp::eNoOp,
 				1,
-				&blendAttachmentState,
+				&result.second,
 				{1, 1, 1, 1}
 			};
-		}
 
-		Debug::missingFunctionality("No blend mode found");
+			return result;
+
+		}
+		Debug::missingFunctionality("No blend mode found!");
 		
 	}
 
-	const vk::PipelineDynamicStateCreateInfo Pipeline::createDynamicStateInfo() {
+	std::pair<vk::PipelineDynamicStateCreateInfo, std::array<vk::DynamicState, 2>> Pipeline::createDynamicStateInfo() {
 
-		const std::array<vk::DynamicState, 2> dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+		std::pair<vk::PipelineDynamicStateCreateInfo, std::array<vk::DynamicState, 2>> result;
+		result.second = std::array<vk::DynamicState, 2>{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 
-		return vk::PipelineDynamicStateCreateInfo{
-			{}, static_cast<uint32_t>(dynamicStates.size()), dynamicStates.data()
+		result.first = vk::PipelineDynamicStateCreateInfo{
+			{}, static_cast<uint32_t>(result.second.size()), result.second.data()
 		};
+
+		return result;
 	}
 
-	const std::pair<vk::PipelineLayout, std::vector<vk::DescriptorSetLayout>> Pipeline::createLayouts(const PipelineInfo& pipelineInfo)
+	std::pair<vk::PipelineLayout, std::vector<vk::DescriptorSetLayout>> Pipeline::createLayouts(const PipelineInfo& pipelineInfo)
 	{
 		const vk::Device device = RenderContext::active->getDevice();
 
 		std::vector<vk::DescriptorSetLayout> descriptorLayoutInfos;
 		descriptorLayoutInfos.reserve(2);
-		pipelineInfo.vertexType->getDescriptorLayout();
+		descriptorLayoutInfos.push_back(pipelineInfo.vertexType->getDescriptorLayout());
 
 		for (auto& inputAtt : pipelineInfo.inputAttachments) descriptorLayoutInfos.emplace_back(inputAtt->getDescriptorSetLayout());
 		
@@ -253,7 +271,7 @@ namespace Hyperion::Rendering {
 		return std::make_pair(device.createPipelineLayout(layoutInfo), descriptorLayoutInfos);
 	}
 
-	const vk::DescriptorPool Pipeline::createDescriptorPool()
+	vk::DescriptorPool Pipeline::createDescriptorPool()
 	{
 		const vk::Device& device = RenderContext::active->getDevice();
 
@@ -271,45 +289,63 @@ namespace Hyperion::Rendering {
 		);
 	}
 
-	const std::vector<vk::Framebuffer> Pipeline::getFrameBuffers(const PipelineInfo& pipelineInfo, const VideoSettings& videoSettings)
+	std::vector<vk::Framebuffer> Pipeline::createFrameBuffers(const PipelineInfo& pipelineInfo, bool lastPass )
 	{
 		const vk::Device& device = RenderContext::active->getDevice();
-		frameBuffers.reserve(videoSettings.bufferImageCount);
+		const VideoSettings& videoSettings = RenderContext::active->getVideoSettings();
+		std::vector<vk::Framebuffer> buffers;
+		buffers.reserve(videoSettings.bufferImageCount);
 		std::vector<vk::ImageView> imageViews;
 		imageViews.reserve((pipelineInfo.depthBuffer != nullptr) + pipelineInfo.inputAttachments.size() + pipelineInfo.renderTargets.size());
-		if (pipelineInfo.depthBuffer != nullptr) imageViews.push_back(pipelineInfo.depthBuffer->getImageView());
-		for (auto& rt : pipelineInfo.renderTargets) imageViews.push_back(rt->getImageView());
+
 		for (auto& input : pipelineInfo.inputAttachments) imageViews.push_back(input->getImageView());
+		if (pipelineInfo.depthBuffer != nullptr) imageViews.push_back(pipelineInfo.depthBuffer->getImageView());
+		
+		if (lastPass) {
+			//Last one is for the actual rendertarget
+			imageViews.push_back({});
+		}
+		else {
+			for (auto& rt : pipelineInfo.renderTargets) imageViews.push_back(rt->getImageView());
+		}
+
 
 		for (uint8_t i = 0; i < videoSettings.bufferImageCount; ++i) {
+
+			//Last element is the render target which is the actual swapchain image
+			if (lastPass) {
+				imageViews.back() = RenderContext::active->getSwapchain().getImageView(i);
+			}
 			
-			frameBuffers.push_back(device.createFramebuffer({
+			buffers.push_back(device.createFramebuffer({
 				{},
 				renderpass,
 				static_cast<uint32_t>(imageViews.size()),
 				imageViews.data(),
-				pipelineInfo.resolution.width,
-				pipelineInfo.resolution.height,
-				pipelineInfo.resolution.depth,
+				videoSettings.resolution.width,
+				videoSettings.resolution.height,
+				1,
 				
 			}));
 		}
-		return frameBuffers;
+		return buffers;
 	}
 
-	const vk::RenderPass Pipeline::createRenderPass(const PipelineInfo& pipelineInfo)
+	vk::RenderPass Pipeline::createRenderPass(const PipelineInfo& pipelineInfo)
 	{
 		std::vector<vk::AttachmentDescription> attachmentDescriptions;
 		std::vector<vk::SubpassDescription> subpassDescriptions;
 		/*std::vector<vk::SubpassDependency> dependencies;*/
 
-		for (auto rt : pipelineInfo.renderTargets) {
-			attachmentDescriptions.emplace_back(rt->getAttachmentDescription());
-		}
-		attachmentDescriptions.emplace_back(pipelineInfo.depthBuffer->getAttachmentDescription());
 		for (auto inputAttachment : pipelineInfo.inputAttachments) {
 			attachmentDescriptions.emplace_back(inputAttachment->getAttachmentDescription());
 		}
+		if (pipelineInfo.depthBuffer != nullptr) attachmentDescriptions.emplace_back(pipelineInfo.depthBuffer->getAttachmentDescription());
+		for (size_t i = 0; i < pipelineInfo.renderTargets.size(); ++i) {
+			attachmentDescriptions.emplace_back(pipelineInfo.renderTargets[i]->getAttachmentDescription(i == pipelineInfo.renderTargets.size() - 1));
+		}
+		
+		
 
 		//TODO Support Multiple subpasses and dependencies
 
@@ -317,11 +353,17 @@ namespace Hyperion::Rendering {
 		inputAttachmentReferences.reserve(pipelineInfo.inputAttachments.size());
 		for (uint32_t i = 0; i < pipelineInfo.inputAttachments.size(); ++i) inputAttachmentReferences.emplace_back(vk::AttachmentReference{ i, pipelineInfo.inputAttachments[i]->getReadLayout() });
 
+		const uint32_t depthBufferOffset = static_cast<uint32_t>(pipelineInfo.inputAttachments.size());
+		vk::AttachmentReference depthBufferReference{ depthBufferOffset, DepthBuffer::defaultDepthStencilLayout };
+
 		std::vector<vk::AttachmentReference> renderTargetReferences;
 		renderTargetReferences.reserve(pipelineInfo.inputAttachments.size());
-		for (uint32_t i = 0; i < pipelineInfo.renderTargets.size(); ++i) renderTargetReferences.emplace_back(vk::AttachmentReference{ i, pipelineInfo.renderTargets[i]->defaultRenderTargetLayout });
+		const uint32_t renderTargetsOffset = depthBufferOffset + 1;
+		for (uint32_t i = 0; i < pipelineInfo.renderTargets.size(); ++i) {
+			renderTargetReferences.emplace_back(vk::AttachmentReference{ i + renderTargetsOffset, pipelineInfo.renderTargets[i]->defaultRenderTargetLayout });
+		}
 
-		vk::AttachmentReference depthBufferReference{ 0, DepthBuffer::defaultDepthStencilLayout };
+		
 
 		subpassDescriptions.emplace_back(vk::SubpassDescription{
 			{},
@@ -363,13 +405,22 @@ namespace Hyperion::Rendering {
 
 	}
 
-	PipelineHandler::PipelineHandler(const Configuration& config) : shaderReg(ShaderRegistry(config))
+	PipelineHandler::PipelineHandler(const Configuration& config, const DrawController& drawController) : drawController(&drawController), shaderReg(ShaderRegistry(config))
 	{
 		
 		vk::PipelineCacheCreateInfo cacheCreateInfo{};
 		pipelineCache = RenderContext::active->getDevice().createPipelineCache(cacheCreateInfo);
 
-		forwardPath = Pipeline{ };
+		forwardPath = Pipeline{ 
+			*this, 
+			PipelineInfo{
+				PipelineInfo::DefaultForward{},
+				{},
+				drawController.getRenderTarget(DrawController::defaultRenderTargetName),
+				drawController.getDepthBuffer(DrawController::defaultDepthBufferName)
+
+			}
+		};
 	}
 	PipelineHandler::~PipelineHandler()
 	{

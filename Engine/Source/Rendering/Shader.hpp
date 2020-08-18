@@ -40,7 +40,9 @@ namespace Hyperion::Rendering {
 		const Shader& getShader(const std::filesystem::path& path) const;
 
 	private:
+
+		static const std::filesystem::path spirVExtension;
 		std::unordered_map<std::string, const Shader*> loadedMap;
-		std::string shaderDir;
+		std::filesystem::path shaderDir;
 	};
 }

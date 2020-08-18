@@ -37,10 +37,11 @@ namespace Hyperion::Rendering {
 		std::vector<vk::SurfaceFormatKHR> surfaceFormats{ RenderContext::active->getGPU().getSurfaceFormatsKHR(surface) };
 		for (auto& format : surfaceFormats) {
 
+			//TODO Get more into colour formats for surfaces and other rendertargets
 			if (format.format == vk::Format::eB8G8R8A8Unorm && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
 				surfaceFormat = format;
 		}
-		//What if not found?
+		//TODO What if not found?
 
 		std::vector<vk::PresentModeKHR> presentModes{ RenderContext::active->getGPU().getSurfacePresentModesKHR(surface) };
 		if (std::find(presentModes.cbegin(), presentModes.cend(), vk::PresentModeKHR::eMailbox) == presentModes.end()) {
@@ -123,5 +124,9 @@ namespace Hyperion::Rendering {
 	const vk::SwapchainKHR& Swapchain::getRaw() const
 	{
 		return swapchain;
+	}
+	const vk::ImageView& Swapchain::getImageView(size_t bufferIndex) const
+	{
+		return swapchainImageViews[bufferIndex];
 	}
 }

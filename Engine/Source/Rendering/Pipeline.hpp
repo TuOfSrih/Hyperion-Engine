@@ -32,16 +32,22 @@ namespace Hyperion::Rendering {
 	public:
 		struct DefaultForward {};
 
-		PipelineInfo(DefaultForward forward, std::vector<const FrameBufferAttachment*> attachments, const RenderTarget* renderTarget, const DepthBuffer* depthBuffer) :
-			shaders({ {vk::ShaderStageFlagBits::eVertex, "defaultForwardVertex"}, {vk::ShaderStageFlagBits::eFragment, "defaultForwardFragment"} }),
-			inputAttachments(attachments),
-			renderTargets({renderTarget}),
-			depthBuffer(depthBuffer),
-			flags(DepthStencilFlags(DepthStencilFlagBits::depthTestEnabled) | DepthStencilFlagBits::depthWriteEnable), //Find more elegant solution for flags
-			vertexType(new RawVertex()), // Possibly memory leak
-			cullingFlags(vk::CullModeFlagBits::eNone),
-			blendMode(BlendMode::alphaBlend)
-			{(void) forward;};
+		PipelineInfo(DefaultForward forward, 
+			std::vector<const FrameBufferAttachment*> attachments, 
+			const RenderTarget* renderTarget, 
+			const DepthBuffer* depthBuffer) :
+				shaders({ {vk::ShaderStageFlagBits::eVertex, defaultForwardVertexShaderName}, {vk::ShaderStageFlagBits::eFragment, defaultForwardFragmentShaderName} }),
+				inputAttachments(attachments),
+				renderTargets({renderTarget}),
+				depthBuffer(depthBuffer),
+				flags(DepthStencilFlags(DepthStencilFlagBits::depthTestEnabled) | DepthStencilFlagBits::depthWriteEnable), //Find more elegant solution for flags
+				vertexType(new RawVertex()), // TODO Possibly memory leak
+				cullingFlags(vk::CullModeFlagBits::eNone),
+				blendMode(BlendMode::alphaBlend)
+					{(void) forward;};
+
+		static const std::string defaultForwardVertexShaderName;
+		static const std::string defaultForwardFragmentShaderName;
 
 		std::vector<std::pair<vk::ShaderStageFlagBits, std::string>> shaders;
 		std::vector<const FrameBufferAttachment*> inputAttachments;
@@ -78,8 +84,8 @@ namespace Hyperion::Rendering {
 		const vk::RenderPass& getRenderPass() const;
 		const vk::Framebuffer getActiveFrameBuffer() const;
 
-		static const vk::ClearValue colorClearValue;//vk::ClearColorValue(std::array<float, 4>(0.0f, 0.0f, 0.0f, 1.0f));
-		static const vk::ClearValue depthClearValue;//vk::ClearColorValue(std::array<float, 4>(0.0f, 0.0f, 0.0f, 1.0f));
+		static const vk::ClearValue colorClearValue;
+		static const vk::ClearValue depthClearValue;
 
 	private:
 
@@ -93,30 +99,32 @@ namespace Hyperion::Rendering {
 		const PipelineHandler* pipelineHandler = nullptr;
 		static std::unordered_map<std::string, vk::ShaderModule> loadedShaders;
 
-		const std::vector<vk::PipelineShaderStageCreateInfo> getShaderInfo(const PipelineInfo& pipelineInfo);
-		const std::vector<vk::Framebuffer> getFrameBuffers(const PipelineInfo& pipelineInfo, const VideoSettings& videoSettings);
+		const  std::vector<vk::PipelineShaderStageCreateInfo> getShaderInfo(const PipelineInfo& pipelineInfo);
+		
 
-		static const vk::RenderPass createRenderPass(const PipelineInfo& pipelineInfo);
+		static vk::RenderPass createRenderPass(const PipelineInfo& pipelineInfo);
 		//static const vk::PipelineVertexInputStateCreateInfo getVertexInputInfo(const PipelineInfo& pipelineInfo);
-		static const vk::PipelineInputAssemblyStateCreateInfo createInputAssemblyInfo(const PipelineInfo& pipelineInfo);
-		static const vk::PipelineTessellationStateCreateInfo createTesselationInfo(const PipelineInfo& pipelineInfo);
-		static const vk::PipelineViewportStateCreateInfo createViewportInfo();
-		static const vk::PipelineRasterizationStateCreateInfo createRasterizationInfo(const PipelineInfo& pipelineInfo);
-		static const vk::PipelineMultisampleStateCreateInfo createMultiSampleInfo(const PipelineInfo& pipelineInfo);
-		static const vk::PipelineDepthStencilStateCreateInfo createDepthStencilInfo(const PipelineInfo& pipelineInfo);
-		static const vk::PipelineColorBlendStateCreateInfo createBlendInfo(const PipelineInfo& pipelineInfo);
-		static const vk::PipelineDynamicStateCreateInfo createDynamicStateInfo();
-		static const std::pair<vk::PipelineLayout, std::vector<vk::DescriptorSetLayout>> createLayouts(const PipelineInfo& pipelineInfo);
-		static const vk::DescriptorPool createDescriptorPool();
+		static vk::PipelineInputAssemblyStateCreateInfo createInputAssemblyInfo(const PipelineInfo& pipelineInfo);
+		static vk::PipelineTessellationStateCreateInfo createTesselationInfo(const PipelineInfo& pipelineInfo);
+		static vk::PipelineViewportStateCreateInfo createViewportInfo();
+		static vk::PipelineRasterizationStateCreateInfo createRasterizationInfo(const PipelineInfo& pipelineInfo);
+		static vk::PipelineMultisampleStateCreateInfo createMultiSampleInfo(const PipelineInfo& pipelineInfo);
+		static vk::PipelineDepthStencilStateCreateInfo createDepthStencilInfo(const PipelineInfo& pipelineInfo);
+		static std::pair<vk::PipelineColorBlendStateCreateInfo, vk::PipelineColorBlendAttachmentState> createBlendInfo(const PipelineInfo& pipelineInfo);
+		static std::pair<vk::PipelineDynamicStateCreateInfo, std::array<vk::DynamicState, 2>> createDynamicStateInfo();
+		static std::pair<vk::PipelineLayout, std::vector<vk::DescriptorSetLayout>> createLayouts(const PipelineInfo& pipelineInfo);
+		static vk::DescriptorPool createDescriptorPool();
+
+		std::vector<vk::Framebuffer> createFrameBuffers(const PipelineInfo& pipelineInfo, bool lastPass = false);
 	};
 
 	
-
+	class DrawController;
 	class PipelineHandler{
 	public:
 
 		PipelineHandler() = default;
-		PipelineHandler(const Configuration& config);
+		PipelineHandler(const Configuration& config, const DrawController& drawController);
 		noCopy(PipelineHandler);
 		defaultMove(PipelineHandler);
 		~PipelineHandler();
@@ -126,6 +134,7 @@ namespace Hyperion::Rendering {
 		const Pipeline& getDefaultForward() const;
 	
 	private:
+		const DrawController* drawController = nullptr;
 		vk::PipelineCache pipelineCache;
 		Pipeline forwardPath;
 		ShaderRegistry shaderReg;

@@ -22,5 +22,19 @@ namespace Hyperion::System::IO {
 
 		return fileBuffer;
 	}
+
+	std::vector<std::filesystem::path> getFilesFromDirectory(const std::filesystem::path& directory, const std::filesystem::path& extension)
+	{
+		std::vector<std::filesystem::path> files;
+		const bool checkExtension = extension != "" && extension.string().size() > 1 && extension.string()[0] == '.';
+
+		for (const auto& file : std::filesystem::directory_iterator(directory)) {
+
+			if (file.path().extension() == extension) {
+				files.push_back(file.path());
+			}
+		}
+		return files;
+	}
 }
 

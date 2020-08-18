@@ -189,4 +189,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\Shaders\default\defaultForward.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\..\Shaders\default\defaultForward.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

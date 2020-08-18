@@ -24,8 +24,11 @@ namespace Hyperion::Rendering {
 		virtual ~Image2D() = default;
 
 		//Check image formats
-		static const vk::Format defaultColorFormat = vk::Format::eR8G8B8A8Unorm;
+		static const vk::Format defaultColorFormat = vk::Format::eB8G8R8A8Unorm;
 		static const vk::Format defaultDepthStencilFormat = vk::Format::eD24UnormS8Uint;
+
+		virtual vk::ImageSubresourceRange getTotalResourceRange() const;
+
 	protected:
 		vk::Extent2D extent;
 	};
@@ -36,17 +39,18 @@ namespace Hyperion::Rendering {
 		RenderTarget(
 			const vk::Extent2D& extent,
 			const void* data = nullptr,
-			const vk::DeviceSize size = 0)
-			: Image2D(data, size, Image2D::defaultColorFormat, extent, 1, vk::SampleCountFlagBits::e1, vk::ImageUsageFlagBits::eColorAttachment) {};
+			const vk::DeviceSize size = 0);
 
 		declCopy(RenderTarget);
 		defaultMove(RenderTarget);
 
 		~RenderTarget() = default;
 
-		virtual vk::AttachmentDescription getAttachmentDescription() const override;
+		virtual vk::AttachmentDescription getAttachmentDescription(bool lastRenderpass) const override;
 
-		static const vk::ImageLayout defaultRenderTargetLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		inline static const vk::ImageLayout defaultRenderTargetLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		inline static const vk::ImageLayout initialLayout = vk::ImageLayout::eUndefined;
+		inline static const vk::ImageLayout presentLayout = vk::ImageLayout::ePresentSrcKHR;
 
 	};
 
@@ -56,17 +60,18 @@ namespace Hyperion::Rendering {
 		DepthBuffer(
 			const vk::Extent2D& extent,
 			const void* data = nullptr,
-			const vk::DeviceSize size = 0)
-			: Image2D(data, size, Image2D::defaultDepthStencilFormat, extent, 1, vk::SampleCountFlagBits::e1, vk::ImageUsageFlagBits::eDepthStencilAttachment) {};
+			const vk::DeviceSize size = 0);
 
 		declCopy(DepthBuffer);
 		defaultMove(DepthBuffer);
 
 		~DepthBuffer() = default;
 
-		virtual vk::AttachmentDescription getAttachmentDescription() const override;
+		vk::AttachmentDescription getAttachmentDescription(bool lastRenderpass = false) const override;
+		vk::ImageSubresourceRange getTotalResourceRange() const override;
+		
 
-		static const vk::ImageLayout defaultDepthStencilLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+		inline static const vk::ImageLayout defaultDepthStencilLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 		static const float minDepth;
 		static const float maxDepth;
 	};
@@ -75,6 +80,7 @@ namespace Hyperion::Rendering {
 
 	};
 
+	//TODO Avoid multiple inheritance
 	class FrameBufferAttachment {
 	public:
 

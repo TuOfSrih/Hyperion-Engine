@@ -425,7 +425,7 @@ namespace Hyperion::System::Memory {
 		const vk::Device& device = Rendering::RenderContext::active->getDevice();
 		ASSERT(static_cast<uint32_t>(status) >= static_cast<uint32_t>(ResourceStatus::VALID));
 		vk::PipelineStageFlags srcStage = vk::PipelineStageFlagBits::eTopOfPipe;
-		vk::PipelineStageFlags dstStage = vk::PipelineStageFlagBits::eTopOfPipe;
+		vk::PipelineStageFlags dstStage = vk::PipelineStageFlagBits::eTopOfPipe;//TODO correct
 		vk::AccessFlags srcFlags;
 		vk::AccessFlags dstFlags;
 		if (newLayout == vk::ImageLayout::eTransferDstOptimal) {
@@ -457,14 +457,14 @@ namespace Hyperion::System::Memory {
 						subresourceRange
 					}
 				}
-				);
+			);
 		});
 
 		currentLayout = newLayout;
 
 		//Todo Implement proper handler with callback
 		queueInfo.getQueue().waitIdle();
-		device.freeCommandBuffers(Rendering::RenderContext::active->getTransferPool(), 1, &buffer);
+		device.freeCommandBuffers(queueInfo.getCommandPool(), 1, &buffer);
 		
 	}
 

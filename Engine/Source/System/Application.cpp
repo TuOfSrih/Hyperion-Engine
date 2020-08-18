@@ -6,7 +6,7 @@
 const std::string applicationName = "Hyperion Test Program";
 const std::string engineName = "Hyperion Engine";
 
-Hyperion::Application::Application(): context(Rendering::RenderContext(config))
+Hyperion::Application::Application() : config(Configuration("Hyperion Test", Version(1, 0, 0))), context(Rendering::RenderContext(config))
 {
 
 }

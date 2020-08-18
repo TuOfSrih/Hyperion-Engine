@@ -17,7 +17,8 @@ namespace Hyperion {
 
 	private:
 		System::TaskScheduler taskScheduler;
+		Configuration config;
 		Rendering::RenderContext context;
-		const Configuration config = Configuration("Hyperion Test", Version(1, 0, 0));
+		
 	};
 }

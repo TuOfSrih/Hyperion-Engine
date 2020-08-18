@@ -78,11 +78,12 @@ namespace Hyperion::Rendering {
 		
 		cmdPoolController = System::Memory::VulkanPoolController(std::thread::hardware_concurrency() + 1, queueIndices);
 
-		drawController = DrawController();
-		drawController.registerDefaultRenderTarget("defaultRT", new RenderTarget(videoSettings.resolution));
-		drawController.registerDefaultDepthBuffer("defaultDB", new DepthBuffer(videoSettings.resolution));
+		//The pipeline handler is not initialized yet but only the reference needs to be set
+		drawController = DrawController(pipelineHandler);
+		
 
-		pipelineHandler = PipelineHandler(config);
+		pipelineHandler = PipelineHandler(config, drawController);
+
 
 		bufferingFences.reserve(videoSettings.bufferImageCount);
 		resourcesAvailableSemaphores.reserve(videoSettings.bufferImageCount);
@@ -103,6 +104,7 @@ namespace Hyperion::Rendering {
 	
 	RenderContext::~RenderContext()
 	{
+		//TODO Avoid double destruction
 		pipelineHandler.~PipelineHandler();
 		cmdPoolController.~VulkanPoolController();
 		swapchain.~Swapchain();
@@ -370,6 +372,10 @@ namespace Hyperion::Rendering {
 	const vk::CommandPool& RenderContext::getComputePool() const
 	{
 		return cmdPoolController.getComputePool();
+	}
+	const Swapchain& RenderContext::getSwapchain() const
+	{
+		return swapchain;
 	}
 	uint32_t RenderContext::getActiveBufferIndex() const
 	{

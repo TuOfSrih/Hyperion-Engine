@@ -21,6 +21,7 @@ namespace Hyperion::Rendering {
 		~Swapchain();
 
 		const vk::SwapchainKHR& getRaw() const;
+		const vk::ImageView& getImageView(size_t bufferIndex) const;
 
 	private:
 		GLFWwindow* window;

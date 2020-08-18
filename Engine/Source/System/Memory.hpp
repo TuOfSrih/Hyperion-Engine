@@ -126,7 +126,7 @@ namespace Hyperion::System::Memory {
 		static constexpr vk::BufferUsageFlagBits uniformBufferFlag = vk::BufferUsageFlagBits::eUniformBuffer;
 	};
 
-	
+	//TODO Fix RAII as well
 	class VulkanDimResource {
 	public:
 
@@ -152,13 +152,13 @@ namespace Hyperion::System::Memory {
 		//TODO Find better solution, friend function?
 		const vk::Image& getHandle() const;
 		const vk::ImageView& getImageView() const;
-		virtual vk::AttachmentDescription getAttachmentDescription() const = 0;
+		virtual vk::AttachmentDescription getAttachmentDescription(bool lastRenderpass) const = 0;
 
 
 		static vk::ImageAspectFlags getImageAspectFlags(const vk::ImageUsageFlags& imageUsageFlags);
 		static vk::ImageViewType getViewType(const vk::ImageType& imageType);
 
-	private:
+	protected:
 
 		vk::Image handle;
 		vk::DeviceMemory memory;
@@ -169,7 +169,6 @@ namespace Hyperion::System::Memory {
 
 		ResourceStatus status;
 
-	protected:
 		void copyFrom(const VulkanDimResource& other, const std::vector<vk::ImageCopy>& imageCopies);
 		void copyFrom(const VulkanBuffer& other, const std::vector<vk::BufferImageCopy>& bufferImageCopies);
 

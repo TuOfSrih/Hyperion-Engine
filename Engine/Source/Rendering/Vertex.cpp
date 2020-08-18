@@ -68,7 +68,7 @@ namespace Hyperion::Rendering {
 	}
 	std::vector<vk::VertexInputAttributeDescription> RawVertex::getInputAttributeDescriptions() const
 	{
-		return { {0, 0, VertexType::vec3Format}, offsetof(RawVertex, pos)};
+		return { {0, 0, VertexType::vec3Format, offsetof(RawVertex, pos)} };
 	}
 	vk::VertexInputBindingDescription RawVertex::getInputBindingDescription() const
 	{
@@ -80,6 +80,21 @@ namespace Hyperion::Rendering {
 	}
 	vk::DescriptorSetLayout RawVertex::getDescriptorLayout() const
 	{
-		return vk::DescriptorSetLayout();
+		const vk::Device& device = RenderContext::active->getDevice();
+
+		//TODO Proper stages
+		vk::DescriptorSetLayoutBinding descriptorBinding{
+			0,
+			vk::DescriptorType::eUniformBuffer,
+			1,
+			vk::ShaderStageFlagBits::eAll,
+			nullptr
+		};
+
+		return device.createDescriptorSetLayout({
+			{},
+			1,
+			&descriptorBinding
+			});
 	}
 }

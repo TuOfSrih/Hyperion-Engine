@@ -44,6 +44,7 @@ namespace Hyperion::Rendering {
 		const vk::CommandPool& getTransferPool() const;
 		const vk::CommandPool& getComputePool() const;
 
+		const Swapchain& getSwapchain() const;
 		uint32_t getActiveBufferIndex() const;
 
 		const PipelineHandler& getPipelineHandler() const;
@@ -91,7 +92,7 @@ namespace Hyperion::Rendering {
 		vk::Queue computeQueue;
 		vk::Queue transferQueue;
 
-		Hyperion::Rendering::Swapchain swapchain;
+		Swapchain swapchain;
 		uint32_t activeBufferIndex;
 		System::Memory::VulkanPoolController cmdPoolController;
 

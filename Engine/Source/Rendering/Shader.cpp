@@ -48,7 +48,13 @@ namespace Hyperion::Rendering {
 
 	ShaderRegistry::ShaderRegistry(const Configuration& config, const std::vector<std::filesystem::path>& shaderPaths) : shaderDir(config.shaderDir)
 	{
-		bulkLoadShaders(shaderPaths);
+		if (shaderPaths.size() == 0) {
+			bulkLoadShaders(System::IO::getFilesFromDirectory(shaderDir, spirVExtension));
+		}
+		else {
+			bulkLoadShaders(shaderPaths);
+		}
+		
 	}
 
 	ShaderRegistry::~ShaderRegistry()
@@ -60,7 +66,7 @@ namespace Hyperion::Rendering {
 	const Shader& ShaderRegistry::loadShader(const std::filesystem::path& path)
 	{
 		ASSERT(path != std::string());
-		auto [iterator, inserted] = loadedMap.emplace(std::make_pair(path.string(), new Shader(shaderDir / path)));
+		auto [iterator, inserted] = loadedMap.emplace(std::make_pair(path.filename().string(), new Shader(shaderDir / path)));
 
 		ASSERT(inserted);
 
@@ -87,4 +93,6 @@ namespace Hyperion::Rendering {
 
 		return *mapEntry->second;
 	}
+
+	const std::filesystem::path ShaderRegistry::spirVExtension = ".spv";
 }

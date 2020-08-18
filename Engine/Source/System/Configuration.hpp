@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-
+#include <filesystem>
 
 namespace Hyperion {
 
@@ -22,11 +22,11 @@ namespace Hyperion {
 	public:
 		explicit Configuration(const std::string applicationName, const Version applicationVersion);
 
-		const std::string applicationName;
-		const std::string engineName = "Hyperion Engine";
-		const Version applicationVersion;
-		const Version engineVersion = Version(1, 0, 0);
+		std::string applicationName;
+		std::string engineName = "Hyperion Engine";
+		Version applicationVersion;
+		Version engineVersion = Version(1, 0, 0);
 
-		const std::string shaderDir = "";
+		std::filesystem::path shaderDir = std::filesystem::current_path() / "Shaders" / "default";
 	};
 }

@@ -4,9 +4,18 @@
 #include "Camera.hpp"
 #include "RenderContext.hpp"
 
+#include <cassert>
+
 
 namespace Hyperion::Rendering{
 	
+	DrawController::DrawController(const PipelineHandler& pipelineHandler) : pipelineHandler(&pipelineHandler)
+	{
+		const vk::Extent2D& resolution = RenderContext::active->getVideoSettings().resolution;
+		registerDefaultRenderTarget(defaultRenderTargetName, new RenderTarget(resolution));
+		registerDefaultDepthBuffer(defaultDepthBufferName, new DepthBuffer(resolution));
+	}
+
 	DrawController::~DrawController()
 	{
 		for (auto ptr : textures) delete ptr.second;
@@ -30,7 +39,7 @@ namespace Hyperion::Rendering{
 		depthBuffers.insert(std::make_pair(name, depthBuffer));
 	}
 
-	void DrawController::registerDefaultRenderTarget(const std::string& name, const RenderTarget* renderTarget)
+	void DrawController::registerDefaultRenderTarget(const std::string& name, RenderTarget* renderTarget)
 	{
 		registerRenderTarget(name, renderTarget);
 		defaultRenderTarget = renderTarget;
@@ -40,6 +49,24 @@ namespace Hyperion::Rendering{
 	{
 		registerDepthBuffer(name, depthBuffer);
 		defaultDepthBuffer = depthBuffer;
+	}
+
+	const Texture* DrawController::getTexture(const std::string& name) const
+	{
+		assert(textures.count(name) > 0);
+		return textures.find(name)->second;
+	}
+
+	const RenderTarget* DrawController::getRenderTarget(const std::string& name) const
+	{
+		assert(renderTargets.count(name) > 0);
+		return renderTargets.find(name)->second;
+	}
+
+	const DepthBuffer* DrawController::getDepthBuffer(const std::string& name) const
+	{
+		assert(depthBuffers.count(name) > 0);
+		return depthBuffers.find(name)->second;
 	}
 
 	std::vector<vk::CommandBuffer> DrawController::drawAll() const
@@ -54,26 +81,32 @@ namespace Hyperion::Rendering{
 		);//TODO Do not use one time command buffers
 		const vk::CommandBuffer& cmdBuffer = cmdBufferVector[0];
 
+		startCommandBuffer(cmdBuffer);
+		startRenderPass(cmdBuffer, pipelineHandler->getDefaultForward());
+
 		setConstants(cmdBuffer);
 
 		for (auto obj : drawObjects) {
 			obj->record(cmdBuffer);
 		}
 
+		cmdBuffer.endRenderPass();
+
 		cmdBuffer.end();
 
 		return { cmdBuffer };
 	}
 
-	void DrawController::setConstants(const vk::CommandBuffer& cmdBuffer) const
+	void DrawController::startCommandBuffer(const vk::CommandBuffer& cmdBuffer) const
 	{
-		const Pipeline& pipeline = pipelineHandler->getDefaultForward();
-		const VideoSettings& videoSettings = RenderContext::active->getVideoSettings();
 		cmdBuffer.begin(
 			{ vk::CommandBufferUsageFlagBits::eOneTimeSubmit, nullptr }//TODO use Inheritance
 		);
+	}
 
-		std::vector<vk::ClearValue> clears = { Pipeline::colorClearValue, Pipeline::depthClearValue };
+	void DrawController::startRenderPass(const vk::CommandBuffer& cmdBuffer, const Pipeline& pipeline) const
+	{
+		std::array<vk::ClearValue, 2> clears = { Pipeline::colorClearValue, Pipeline::depthClearValue };
 		cmdBuffer.beginRenderPass(
 			vk::RenderPassBeginInfo{
 				pipeline.getRenderPass(),
@@ -84,6 +117,13 @@ namespace Hyperion::Rendering{
 			},
 			vk::SubpassContents::eInline
 		);
+	}
+
+	void DrawController::setConstants(const vk::CommandBuffer& cmdBuffer) const
+	{
+		const Pipeline& pipeline = pipelineHandler->getDefaultForward();
+		const VideoSettings& videoSettings = RenderContext::active->getVideoSettings();
+		
 
 		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.getRaw());
 
@@ -91,6 +131,9 @@ namespace Hyperion::Rendering{
 
 		cmdBuffer.setScissor(0, { {{0, 0}, videoSettings.resolution} });
 	}
+
+	const std::string DrawController::defaultRenderTargetName = "defaultRenderTarget";
+	const std::string DrawController::defaultDepthBufferName = "defaultDepthBuffer";
 
 	void VisualEntity::record(const vk::CommandBuffer& commandBuffer) const
 	{
@@ -100,7 +143,7 @@ namespace Hyperion::Rendering{
 		std::memcpy(dest, &ubo, sizeof(ubo));
 		ubos.at(RenderContext::active->getActiveBufferIndex()).unmapMemory();
 
-		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->getLayout(), 0, { MVPDescriptors.at(activeIndex) }, {});
+		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->getLayout(), 0, { getActiveDescriptorSet() }, {});
 
 		mesh->bind(commandBuffer);
 		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->getLayout(), 0, { getActiveDescriptorSet() }, {});
@@ -147,7 +190,7 @@ namespace Hyperion::Rendering{
 		}
 		
 	}
-	vk::DescriptorSet VisualEntity::getActiveDescriptorSet() const
+	const vk::DescriptorSet& VisualEntity::getActiveDescriptorSet() const
 	{
 		return MVPDescriptors.at(RenderContext::active->getActiveBufferIndex());
 	}

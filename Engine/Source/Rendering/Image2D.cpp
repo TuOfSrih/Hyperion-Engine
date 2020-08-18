@@ -1,6 +1,8 @@
 
 #include "Image2D.hpp"
 
+#include "RenderContext.hpp"
+
 #include "System/Debug.hpp"
 
 
@@ -56,21 +58,57 @@ namespace Hyperion::Rendering {
 	const float DepthBuffer::minDepth = .0f;
 	const float DepthBuffer::maxDepth = 1.f;
 
-	vk::AttachmentDescription RenderTarget::getAttachmentDescription() const 
+	RenderTarget::RenderTarget(const vk::Extent2D& extent, const void* data, const vk::DeviceSize size) : 
+		Image2D(data, size, Image2D::defaultColorFormat, extent, 1, vk::SampleCountFlagBits::e1, vk::ImageUsageFlagBits::eColorAttachment)
+	{
+		changeLayout(QueueType::GRAPHICS, defaultRenderTargetLayout, getTotalResourceRange());
+	}
+
+	vk::AttachmentDescription RenderTarget::getAttachmentDescription(bool finalPass) const
 	{
 		return {
 				{},
 				Image2D::defaultColorFormat,
 				vk::SampleCountFlagBits::e1,
-				vk::AttachmentLoadOp::eLoad,
+				vk::AttachmentLoadOp::eDontCare,
+				vk::AttachmentStoreOp::eStore,
+				vk::AttachmentLoadOp::eDontCare,
 				vk::AttachmentStoreOp::eDontCare,
-				vk::AttachmentLoadOp::eLoad,
-				vk::AttachmentStoreOp::eDontCare,
-				RenderTarget::defaultRenderTargetLayout,
-				RenderTarget::defaultRenderTargetLayout
+				RenderTarget::initialLayout,
+				finalPass? RenderTarget::presentLayout : RenderTarget::defaultRenderTargetLayout
 		};
 	}
-	vk::AttachmentDescription DepthBuffer::getAttachmentDescription() const
+
+	/*void RenderTarget::makePresentable(const vk::CommandBuffer& cmdBuffer)
+	{
+		cmdBuffer.pipelineBarrier(
+			vk::PipelineStageFlagBits::eFragmentShader,
+			vk::PipelineStageFlagBits::eBottomOfPipe,
+			{},
+			{},
+			{},
+			{
+				vk::ImageMemoryBarrier{
+					{},
+					{},
+					currentLayout,
+					vk::ImageLayout::ePresentSrcKHR,
+					VK_QUEUE_FAMILY_IGNORED,
+					VK_QUEUE_FAMILY_IGNORED,
+					handle,
+					getTotalResourceRange()
+				}
+			}
+		);
+	}*/
+
+	DepthBuffer::DepthBuffer(const vk::Extent2D& extent, const void* data, const vk::DeviceSize size)
+		: Image2D(data, size, Image2D::defaultDepthStencilFormat, extent, 1, vk::SampleCountFlagBits::e1, vk::ImageUsageFlagBits::eDepthStencilAttachment)
+	{
+		changeLayout(QueueType::GRAPHICS, defaultDepthStencilLayout, getTotalResourceRange());
+	}
+
+	vk::AttachmentDescription DepthBuffer::getAttachmentDescription(bool ) const
 	{
 		return {
 				{},
@@ -82,6 +120,28 @@ namespace Hyperion::Rendering {
 				vk::AttachmentStoreOp::eStore,
 				DepthBuffer::defaultDepthStencilLayout,
 				DepthBuffer::defaultDepthStencilLayout
+		};
+	}
+
+	vk::ImageSubresourceRange DepthBuffer::getTotalResourceRange() const
+	{
+		return {
+			vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil,
+			0,
+			1,
+			0,
+			1
+		};
+	}
+
+	vk::ImageSubresourceRange Image2D::getTotalResourceRange() const
+	{
+		return {
+			vk::ImageAspectFlagBits::eColor,
+			0,
+			1,
+			0,
+			1 
 		};
 	}
 }
