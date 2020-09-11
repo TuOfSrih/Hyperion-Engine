@@ -48,13 +48,14 @@ namespace Hyperion::Rendering {
 
 	ShaderRegistry::ShaderRegistry(const Configuration& config, const std::vector<std::filesystem::path>& shaderPaths) : shaderDir(config.shaderDir)
 	{
+		Debug::trace("Creating shader registry...", 1);
 		if (shaderPaths.size() == 0) {
 			bulkLoadShaders(System::IO::getFilesFromDirectory(shaderDir, spirVExtension));
 		}
 		else {
 			bulkLoadShaders(shaderPaths);
 		}
-		
+		Debug::trace("Successfully created shader registry!", -1);
 	}
 
 	ShaderRegistry::~ShaderRegistry()
@@ -66,7 +67,9 @@ namespace Hyperion::Rendering {
 	const Shader& ShaderRegistry::loadShader(const std::filesystem::path& path)
 	{
 		ASSERT(path != std::string());
+		Debug::trace("Loading shader " + path.string() + "...", 1);
 		auto [iterator, inserted] = loadedMap.emplace(std::make_pair(path.filename().string(), new Shader(shaderDir / path)));
+		Debug::trace("Successfully loaded shader " + path.string() + "!", -1);
 
 		ASSERT(inserted);
 

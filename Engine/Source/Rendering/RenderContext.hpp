@@ -53,6 +53,8 @@ namespace Hyperion::Rendering {
 		void setContext(RenderContext* newContext);
 
 		void render();
+		//TODO remove again
+		void reg(const VisualEntity* object) { drawController.registerDrawObject(object); };
 		
 
 	private:
@@ -102,6 +104,8 @@ namespace Hyperion::Rendering {
 		std::vector<vk::Fence> bufferingFences;
 		std::vector<vk::Semaphore> resourcesAvailableSemaphores;
 		std::vector<vk::Semaphore> frameFinishedSemaphores;
+
+		std::vector<std::vector<vk::CommandBuffer>> cmdBuffers;
 		
 	};
 

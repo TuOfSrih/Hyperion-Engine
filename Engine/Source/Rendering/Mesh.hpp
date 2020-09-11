@@ -3,13 +3,14 @@
 #include "System/Memory.hpp"
 
 #include "vulkan/vulkan.hpp"
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "glm/glm.hpp"
 
 #include <vector>
 
 
 namespace Hyperion::Rendering {
-
+	//TODO move semantics or reference
 	class VertexOnlyMesh {
 	public:
 		VertexOnlyMesh(std::vector<glm::vec3> vertices) 

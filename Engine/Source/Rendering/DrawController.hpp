@@ -22,10 +22,12 @@ namespace Hyperion::Rendering {
 
 	class VisualEntity {
 	public:
-		VisualEntity( Transform transform, const Mesh* mesh, const Pipeline* pipeline) : pipeline(pipeline), transform(transform), mesh(mesh){};
-		VisualEntity( Transform transform, PrimitiveType primitive, const Pipeline* pipeline ) : pipeline(pipeline), transform(transform), mesh(GetPrimitive(primitive)){};
+		VisualEntity(Transform transform, const Mesh* mesh, const Pipeline* pipeline) : pipeline(pipeline), transform(transform), mesh(mesh) { allocateDescriptorSet(); };
+		VisualEntity( Transform transform, PrimitiveType primitive, const Pipeline* pipeline ) : pipeline(pipeline), transform(transform), mesh(GetPrimitive(primitive)){ allocateDescriptorSet(); };
 
 		virtual void record(const vk::CommandBuffer& commandBuffer) const;
+		//TODO add virtual destructor
+		void update();
 
 	private:
 
@@ -53,8 +55,11 @@ namespace Hyperion::Rendering {
 		defaultTouch(DrawController);
 		~DrawController();
 
+		//Remove
 		static const std::string defaultRenderTargetName;
 		static const std::string defaultDepthBufferName;
+
+		void registerDrawObject(const VisualEntity* object);
 
 		void registerTexture(const std::string& name, const Texture* texture);
 		void registerRenderTarget(const std::string& name, const RenderTarget* renderTarget);

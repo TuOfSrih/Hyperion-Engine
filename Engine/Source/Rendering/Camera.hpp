@@ -7,7 +7,7 @@ namespace Hyperion::Rendering {
 
 	class Camera {
 	public:
-		Camera(const Transform& transform) : transform(transform), FoVAngle(FoVAngle) {};
+		Camera(const Transform& transform) : transform(transform) {};
 
 		glm::mat4x4 getViewMatrix();
 		glm::mat4x4 getProjectionMatrix();

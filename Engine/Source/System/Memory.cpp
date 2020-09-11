@@ -106,9 +106,11 @@ namespace Hyperion::System::Memory {
 				other.handle,
 				this->handle,
 				{
+					vk::BufferCopy{
 					0,
 					0,
 					other.dataSize
+					}
 				}
 			);
 		}

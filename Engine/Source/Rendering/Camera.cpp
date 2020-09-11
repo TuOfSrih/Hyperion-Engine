@@ -6,17 +6,23 @@
 namespace Hyperion::Rendering {
 	
 	glm::mat4x4 Camera::getViewMatrix()
-	{
-		return transform.getInverseModelMatrix();
+	{//TODO properly implement view matrix, why not y up
+		return glm::lookAt(transform.getPosition(), { 0, 0, 0 }, { 0, 1, 0 });
+		//return transform.getInverseModelMatrix();
 	}
 	glm::mat4x4 Camera::getProjectionMatrix()
 	{
 		const VideoSettings settings = RenderContext::active->getVideoSettings();
-		return glm::perspective(glm::radians(FoVAngle), static_cast<float>(settings.resolution.width) / settings.resolution.height, near, far);
+
+		auto result = glm::perspective(glm::radians(FoVAngle), static_cast<float>(settings.resolution.width) / settings.resolution.height, near, far);
+		result[1][1] *= -1;
+
+		return result;
 	}
+
 	Camera& Hyperion::Rendering::Camera::getActive()
 	{
-		static Camera cam({});
+		static Camera cam(Transform({ 10, 10, 10 }, {}, { 1, 1, 1 }));
 		return cam;
 	}
 }

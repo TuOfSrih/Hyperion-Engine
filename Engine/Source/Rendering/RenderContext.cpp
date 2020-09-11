@@ -12,11 +12,14 @@ namespace Hyperion::Rendering {
 	//TODO Subdivide Function into multiple
 	Hyperion::Rendering::RenderContext::RenderContext(const Configuration& config)
 	{
+		Debug::trace("Initializing Vulkan context...", 1);
 		setContext(this);
 		//assert
+		Debug::trace("Initializing GLFW...", 1);
 		glfwInit();
+		Debug::trace("Successfully initialized GLFW!", -1);
 		
-
+		Debug::trace("Creating Vulkan instance...", 1);
 		uint32_t count;
 		const char** glfwExt = glfwGetRequiredInstanceExtensions(&count);
 		instanceExtensions.insert(instanceExtensions.end(), glfwExt, glfwExt + count);
@@ -30,7 +33,7 @@ namespace Hyperion::Rendering {
 		);
 
 		checkLayerSupport();
-
+		
 		instance = vk::createInstance(
 			vk::InstanceCreateInfo(
 				{}, 
@@ -41,12 +44,16 @@ namespace Hyperion::Rendering {
 				instanceExtensions.data()
 			)
 		);
+
+		Debug::trace("Successfully created Vulkan instance!", -1);
 		
 #ifdef _DEBUG
+		Debug::trace("Creating Vulkan debug tools...", 1);
 		debugTools = Debug::VulkanTools(instance);
+		Debug::trace("Successfully created Vulkan debug tools!", -1);
 #endif
 		
-
+		Debug::trace("Creating Vulkan device...", 1);
 		gpu = pickGPU();
 		//TODO Source of no portability, find better solution for finding out how many familites
 		std::vector<float> prios(gpu.getQueueFamilyProperties().size());
@@ -68,23 +75,35 @@ namespace Hyperion::Rendering {
 			)
 		);
 
+		Debug::trace("Successfully created Vulkan device!", -1);
+
+		Debug::trace("Obtaining queues...", 1);
 		const QueueFamilyIndices queueIndices = getQueueFamilyIndices();
 		graphicsQueue = device.getQueue(queueIndices.graphicsIndex, 0);
 		transferQueue = device.getQueue(queueIndices.transferIndex, queueIndices.transferIndex == queueIndices.graphicsIndex);
 		computeQueue = device.getQueue(queueIndices.computeIndex, (queueIndices.computeIndex == queueIndices.graphicsIndex) + (queueIndices.computeIndex == queueIndices.transferIndex));
+		Debug::trace("Successfully obtained queues!", -1);
 
-		//Changes width to 1061
+		//TODO Changes width to 1061
+		Debug::trace("Creating swapchain...", 1);
 		swapchain = Swapchain(config, videoSettings, queueIndices);
+		Debug::trace("Successfully created swapchain!", -1);
 		
+		Debug::trace("Creating command pool controller...", 1);
 		cmdPoolController = System::Memory::VulkanPoolController(std::thread::hardware_concurrency() + 1, queueIndices);
+		Debug::trace("Successfully created command pool controller!", -1);
 
 		//The pipeline handler is not initialized yet but only the reference needs to be set
+		Debug::trace("Creating draw controller...", 1);
 		drawController = DrawController(pipelineHandler);
+		Debug::trace("Successfully created draw controller!", -1);
 		
-
+		Debug::trace("Creating pipeline handler...", 1);
 		pipelineHandler = PipelineHandler(config, drawController);
+		Debug::trace("Successfully created pipeline handler!", -1);
 
 
+		Debug::trace("Creating frame synchronization primitives...", 1);
 		bufferingFences.reserve(videoSettings.bufferImageCount);
 		resourcesAvailableSemaphores.reserve(videoSettings.bufferImageCount);
 		frameFinishedSemaphores.reserve(videoSettings.bufferImageCount);
@@ -100,6 +119,12 @@ namespace Hyperion::Rendering {
 			resourcesAvailableSemaphores.emplace_back(device.createSemaphore({}));
 			frameFinishedSemaphores.emplace_back(device.createSemaphore({}));
 		}
+
+		Debug::trace("Successfully created frame synchronization primitives!", -1);
+
+		cmdBuffers.resize(videoSettings.bufferImageCount);
+
+		Debug::trace("Successfully initialized Vulkan context!", -1);
 	}
 	
 	RenderContext::~RenderContext()
@@ -420,13 +445,18 @@ namespace Hyperion::Rendering {
 	}
 	void RenderContext::render()
 	{
-		auto cmdBuffers = drawController.drawAll();
-
-		device.waitForFences(bufferingFences.at(activeBufferIndex), VK_FALSE, std::numeric_limits<uint64_t>::max());
-		device.resetFences(bufferingFences.at(activeBufferIndex));
+		if (cmdBuffers[activeBufferIndex].size() != 0) {
+			device.freeCommandBuffers(getActiveGraphicsPool(), cmdBuffers[activeBufferIndex]);
+		}
+		cmdBuffers[activeBufferIndex] = drawController.drawAll();
+		//TODO Fix synchronization
+		/*device.waitForFences(bufferingFences.at(activeBufferIndex), VK_TRUE, std::numeric_limits<uint64_t>::max());
+		device.resetFences(bufferingFences.at(activeBufferIndex));*/
 
 		uint32_t nextIndex = device.acquireNextImageKHR(swapchain.getRaw(), std::numeric_limits<uint64_t>::max(), resourcesAvailableSemaphores.at(activeBufferIndex), {}).value;
 		nextIndex = (activeBufferIndex + 1) % videoSettings.bufferImageCount;
+
+		device.resetFences(bufferingFences.at(activeBufferIndex));
 
 		vk::PipelineStageFlags flags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 		graphicsQueue.submit(
@@ -435,8 +465,8 @@ namespace Hyperion::Rendering {
 				1,
 				&resourcesAvailableSemaphores.at(activeBufferIndex),
 				&flags, //TODO Possibly earlier, check again
-				static_cast<uint32_t>(cmdBuffers.size()),
-				cmdBuffers.data(),
+				static_cast<uint32_t>(cmdBuffers[activeBufferIndex].size()),
+				cmdBuffers[activeBufferIndex].data(),
 				1,
 				&frameFinishedSemaphores.at(activeBufferIndex)
 				} 
@@ -444,6 +474,9 @@ namespace Hyperion::Rendering {
 			bufferingFences.at(nextIndex)
 
 		);
+
+		device.waitForFences(bufferingFences.at(nextIndex), VK_TRUE, std::numeric_limits<uint64_t>::max());
+		device.resetFences(bufferingFences.at(activeBufferIndex)); 
 
 		graphicsQueue.presentKHR(
 			vk::PresentInfoKHR{

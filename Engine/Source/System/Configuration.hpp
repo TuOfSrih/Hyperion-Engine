@@ -27,6 +27,6 @@ namespace Hyperion {
 		Version applicationVersion;
 		Version engineVersion = Version(1, 0, 0);
 
-		std::filesystem::path shaderDir = std::filesystem::current_path() / "Shaders" / "default";
+		std::filesystem::path shaderDir = std::filesystem::current_path() /*/ ".." / ".." / ".."*/ / "Shaders" / "default";
 	};
 }

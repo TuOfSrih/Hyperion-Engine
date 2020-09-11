@@ -11,12 +11,16 @@ namespace Hyperion::Rendering {
 	{
 		const vk::Device& device = RenderContext::active->getDevice();
 
+		Debug::trace("Creating window...", 1);
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		window = glfwCreateWindow(videoSettings.resolution.width, videoSettings.resolution.height, config.applicationName.c_str(), NULL, NULL);
+		Debug::trace("Successfully created window!", -1);
 		VkSurfaceKHR surf;
 		//TODO ASSERT
+		Debug::trace("Creating surface...", 1);
 		glfwCreateWindowSurface(RenderContext::active->getInstance() , window, nullptr, &surf);
 		surface = surf;
+		Debug::trace("Successfully created surface!", -1);
 
 		//TODO Check all Queue families? 
 		RenderContext::active->getGPU().getSurfaceSupportKHR(queueIndices.graphicsIndex, surface);
@@ -52,7 +56,7 @@ namespace Hyperion::Rendering {
 
 			presentMode = vk::PresentModeKHR::eMailbox;
 		}
-
+		Debug::trace("Creating Vulkan swapchain object...", 1);
 		swapchain = device.createSwapchainKHR(
 			vk::SwapchainCreateInfoKHR(
 				{},
@@ -73,6 +77,9 @@ namespace Hyperion::Rendering {
 				swapchain
 			)
 		);
+		Debug::trace("Successfully created Vulkan swapchain object!", -1);
+
+		Debug::trace("Obtaining swapchain images...", 1);
 		swapchainImageViews.reserve(videoSettings.bufferImageCount);
 		auto swapChainImages = device.getSwapchainImagesKHR(swapchain);
 		for (auto& image : swapChainImages) {
@@ -88,6 +95,8 @@ namespace Hyperion::Rendering {
 
 			swapchainImageViews.push_back(device.createImageView(imageViewInfo));
 		}
+
+		Debug::trace("Successfully obtained swapchain images!", -1);
 	}
 
 	Swapchain::Swapchain(Swapchain&& other) {

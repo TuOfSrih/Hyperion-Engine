@@ -14,14 +14,13 @@ namespace Hyperion::Rendering {
 
 		case PrimitiveType::Cube:
 			{
-
+				//Right handed with y upwards looking from the outside
 				static Mesh cubeMesh(
 					{
 						{0, 0, 0},
 						{1, 0, 0},
 						{0, 0, 1},
 						{1, 0, 1},
-						{1, 1, 0},
 						{0, 1, 0},
 						{1, 1, 0},
 						{0, 1, 1},

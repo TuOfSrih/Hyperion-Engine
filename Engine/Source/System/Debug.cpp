@@ -28,8 +28,10 @@ namespace Hyperion::Debug {
 		(void)messageType;
 		(void*)pUserData;
 
-		if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) 
-			std::cout << "VALIDATION LAYER - " << debugUtilsMessageSeverityNames.at(messageSeverity) <<": " << pCallbackData->pMessage << std::endl << std::endl;
+		if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+			std::cout << "VALIDATION LAYER - " << debugUtilsMessageSeverityNames.at(messageSeverity) << ": " << pCallbackData->pMessage << std::endl << std::endl;
+		}
+			
 		return VK_FALSE;
 	}
 
@@ -87,6 +89,44 @@ namespace Hyperion::Debug {
 		}
 		
 	}
+
+	static std::optional<StreamCapture> fileLogCapture;
+
+	static std::ofstream logStream;
+
+	static int8_t indentationLevel = 0;
+
+	void traceToFile()
+	{
+		logStream = std::ofstream((std::filesystem::current_path() / "debug.log").string());
+		fileLogCapture.emplace(std::cout, logStream);
+	}
+
+	void stopTracingToFile()
+	{
+		fileLogCapture = {};
+	}
+
+	void trace(const std::string& msg, int8_t indentationChange)
+	{
+		assert( indentationChange <= 0 || std::numeric_limits<int8_t>::max() - indentationChange >= indentationLevel);
+		assert( indentationChange >= 0 || indentationLevel + indentationChange >= 0);
+		
+		
+		if (indentationChange < 0) {
+			indentationLevel += indentationChange;
+		}
+
+		for (int8_t i = 0; i < indentationLevel; ++i) {
+			std::cout << '\t';
+		}
+		std::cout << msg << std::endl;
+
+		if (indentationChange > 0) {
+			indentationLevel += indentationChange;
+		}
+	}
+
 	void missingSupport(const char* message)
 	{
 		throw std::exception(message);
@@ -104,6 +144,18 @@ namespace Hyperion::Debug {
 	}
 	void runtimeError(const char* message)
 	{
+		std::cerr << message << std::endl;
 		throw std::exception(message);
 	}
+
+	StreamCapture::StreamCapture(std::ios& srcStream, std::ios& dstStream): oldStreamBuffer(srcStream.rdbuf()), oldStream(&srcStream)
+	{
+		srcStream.rdbuf(dstStream.rdbuf());
+	}
+
+	StreamCapture::~StreamCapture()
+	{
+		oldStream->rdbuf(oldStreamBuffer);
+	}
+
 }

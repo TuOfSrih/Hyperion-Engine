@@ -24,6 +24,11 @@ namespace Hyperion::Rendering{
 		for (auto ptr : drawObjects) delete ptr;
 	}
 
+	void DrawController::registerDrawObject(const VisualEntity* object)
+	{
+		drawObjects.push_back(object);
+	}
+
 	void DrawController::registerTexture(const std::string& name, const Texture* texture)
 	{
 		textures.insert(std::make_pair(name, texture));
@@ -91,7 +96,6 @@ namespace Hyperion::Rendering{
 		}
 
 		cmdBuffer.endRenderPass();
-
 		cmdBuffer.end();
 
 		return { cmdBuffer };
@@ -137,17 +141,28 @@ namespace Hyperion::Rendering{
 
 	void VisualEntity::record(const vk::CommandBuffer& commandBuffer) const
 	{
-		uint32_t activeIndex = RenderContext::active->getActiveBufferIndex();
-		UBO ubo = { transform.getModelMatrix(), Camera::getActive().getViewMatrix(), Camera::getActive().getProjectionMatrix() };
-		void* dest = ubos.at(activeIndex).mapMemory();
-		std::memcpy(dest, &ubo, sizeof(ubo));
-		ubos.at(RenderContext::active->getActiveBufferIndex()).unmapMemory();
-
 		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->getLayout(), 0, { getActiveDescriptorSet() }, {});
 
 		mesh->bind(commandBuffer);
-		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->getLayout(), 0, { getActiveDescriptorSet() }, {});
 		mesh->draw(commandBuffer);
+	}
+
+	void VisualEntity::update()
+	{
+		
+		System::Memory::UniformBuffer& currentUBO = ubos[RenderContext::active->getActiveBufferIndex()];
+		UBO ubo = { transform.getModelMatrix(),  Camera::getActive().getViewMatrix() , Camera::getActive().getProjectionMatrix() };
+		void* dstUbo = static_cast<UBO*>(currentUBO.mapMemory());
+		std::memcpy(dstUbo, &ubo, sizeof(UBO));
+		auto mvp = ubo.projMatrix * ubo.viewMatrix * ubo.modelMatrix;
+		glm::vec4 input = { -5,2,3,1 };
+		glm::vec4 output =  mvp * input;
+		glm::vec4 totalOutput = output / output.w;
+		/*ubo->modelMatrix = transform.getModelMatrix();
+		ubo->viewMatrix = Camera::getActive().getViewMatrix();
+		ubo->projMatrix = Camera::getActive().getProjectionMatrix();*/
+		currentUBO.unmapMemory();
+		//TODO cleanup chaos
 	}
 
 	void VisualEntity::allocateDescriptorSet()
@@ -170,7 +185,7 @@ namespace Hyperion::Rendering{
 			vk::DescriptorBufferInfo bufferInfo = {
 							ubos.at(i).getHandle(),
 							0,
-							sizeof(System::Memory::UniformBuffer)
+							VK_WHOLE_SIZE
 			};
 			device.updateDescriptorSets(
 				{

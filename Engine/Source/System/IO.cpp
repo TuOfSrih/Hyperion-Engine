@@ -1,6 +1,8 @@
 
 #include "IO.hpp"
 
+#include "Debug.hpp"
+
 namespace Hyperion::System::IO {
 
 	std::vector<std::byte> readBinaryFile(const std::string& filename) {
@@ -28,6 +30,9 @@ namespace Hyperion::System::IO {
 		std::vector<std::filesystem::path> files;
 		const bool checkExtension = extension != "" && extension.string().size() > 1 && extension.string()[0] == '.';
 
+		if (!std::filesystem::exists(directory)) {
+			Debug::runtimeError("Shader directory does not exist!");
+		}
 		for (const auto& file : std::filesystem::directory_iterator(directory)) {
 
 			if (file.path().extension() == extension) {

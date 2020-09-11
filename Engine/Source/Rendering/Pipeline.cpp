@@ -16,6 +16,7 @@ namespace Hyperion::Rendering {
 	}
 	Pipeline::Pipeline(const PipelineHandler& pipelineHandler, const PipelineInfo& pipelineInfo): pipelineHandler(&pipelineHandler)
 	{
+		Debug::trace("Creating pipeline...", 1);
 		const vk::Device device = RenderContext::active->getDevice();
 		renderpass = createRenderPass(pipelineInfo);
 		frameBuffers = createFrameBuffers(pipelineInfo, true);
@@ -72,6 +73,8 @@ namespace Hyperion::Rendering {
 		pipeline = RenderContext::active->getDevice().createGraphicsPipeline(pipelineHandler.getPipelineCache(), graphicsPipelineInfo);
 
 		descriptorPool = createDescriptorPool();
+
+		Debug::trace("Successfully created pipeline", -1);
 	}
 
 	const vk::Pipeline Pipeline::getRaw() const

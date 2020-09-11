@@ -39,7 +39,8 @@ namespace Hyperion::System {
 
 	void Thread::taskLoop()
 	{
-		while (!destroyNext) scheduler.acquireNextTask()();
+		//TODO only acquire tasks when the queue is empty ( startup)
+		//while (!destroyNext) scheduler.acquireNextTask()();
 	}
 
 	void Thread::wait()

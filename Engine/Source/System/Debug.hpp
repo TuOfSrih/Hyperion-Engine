@@ -4,6 +4,11 @@
 
 #include "vulkan/vulkan.hpp"
 
+#include <filesystem>
+#include <iostream>
+#include <fstream>
+#include <optional>
+
 
 #ifdef _DEBUG
 #define ASSERT(EXPR) ((EXPR? (void)0 : Debug::failAssertion(#EXPR, __FILE__, __LINE__)))
@@ -25,6 +30,25 @@ namespace Hyperion::Debug {
 	private:
 		vk::DebugUtilsMessengerEXT debugMessenger;
 	};
+
+	class StreamCapture {
+	public:
+		//StreamCapture() = default;
+		StreamCapture(std::ios& srcStream, std::ios& dstStream);
+		~StreamCapture();
+
+	private:
+		std::streambuf* oldStreamBuffer;
+		std::ios* oldStream;
+	};
+
+	static const std::filesystem::path debugLogName;
+
+	void traceToFile();
+
+	void stopTracingToFile();
+
+	void trace(const std::string& msg, int8_t indentationChange = 0);
 
 	
 	__declspec(noreturn) void missingSupport(const char* message);
